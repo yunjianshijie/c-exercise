@@ -338,6 +338,14 @@
 
 
 
-//
+//12.10
 
-
+#include<stdio.h>
+int main(){
+    int a;
+    scanf("%d",&a);
+    if(a%5==4 || a%5==0) printf("Drying in day %d",a);
+    else printf("Finshing in day %d",a);
+    return 0;
+    
+}

@@ -2,7 +2,6 @@
 #include<stdio.h>
 #include<stdlib.h>
 #include<string.h>
-
 // int main(void)
 // {
 //     char *ptr0 = "Welcome to Xiyou Linux!";
@@ -84,11 +83,9 @@
 //     int a = 4, b = 9,c=-7;
 //     printf("%d", func(a,func(b,c)));
 // }
-
 //为运算与递归完成加法
 
 //6.自定义过滤
-
 // typedef int (*Predicate)(int);//predicate 指针指向一个返回值为int (int)的函数
 // int *filter(int *array, int length, Predicate predicate, int *resultLength)
 // { int *filteredNumbers=(int *)malloc(sizeof(int)*length);
@@ -104,7 +101,6 @@
 // int isPositive(int num) {
 //     return num > 0;
 // }
-
 // int main() {
 //     int array[] = {-3, -2, -1, 0, 1, 2, 3, 4, 5, 6};
 //     int length = sizeof(array) / sizeof(array[0]);//字符串长度（10）
@@ -115,7 +111,11 @@
 //     }
 //     printf("\n");
 //     free(filteredNumbers);
-//     return 0;}
+//     return 0;
+// }
+//函数里面
+
+
 
 //7. 尊嘟假嘟 o.O
 //#include<stdio.h>
@@ -128,17 +128,14 @@
 // struct {
 //     void (*O)(int, int);
 // } o = {func};
-
 // int main() {
 //     int a = 1, b = 2, c;
 //     o.O(a, b);
 //     c = a - b;
-
 //     if (c = 1)
 //         printf("%c", 109 + printf("%c.", 78 + c));
 //     else
 //         printf("o.O");
-
 //     return 0;}
 //输出o.O,1, 形参，进入函数，之后互换没有用  
 //2函数指针o是结构体的名字，O是个指针指向啥都不干函数。
@@ -159,7 +156,7 @@
 //         putchar(i == argc - 1 ? '\n' : ' ');
 //     }
 //     return EXIT_SUCCESS;
-// }//这次又对了，[哭哭]
+//}//这次又对了，[哭哭]
 //argc为传入main函数的参数个数,改变命令名 加上3个参数 及输出4(不知道怎么弄)
 //
 
@@ -183,9 +180,7 @@
 
 
 //11.克隆困境
- #include<string.h>
- #include<stdlib.h>
- #include<stdio.h>
+
 // struct Student {
 //     char *name;
 //     int age;
@@ -274,7 +269,184 @@
 //         printf("battle lose");
 // }
 //#字符串化，直接输出FIRE！
-//++star自增且后输出，9>8,输出win!
+//++star自增且后输出，9>8,输出wini!
+
+
+
+// #include<stdio.h>
+
+// void yi(int n,char m1,char m2){
+// ptintf("将%n盘从%c移到%c",n,m1,m2);
+
+// }
+
+
+// int  hannuota(int n){
+//     if(n==1){
+//         return 1;
+//     }else
+//     {   
+//         return hannuota(n-1)*2+1;
+//     }
+
+
+// }
+
+
+
+// int main(){
+//     int n;
+//     scanf("%d",&n);
+//     printf("%d",hannuota(n));
+//     return 0;
+// }
+
+
+
+
+
+// # 比较含退格的字符串
+// ## 题目描述
+// 给定 s 和 t 两个字符串，当它们分别被输入到空白的文本编辑器后，如果两者相等，返回 true 。# 代表退格字符。
+// 注意：如果对空文本输入退格字符，文本继续为空
+// ## 示例
+// ### 示例 1：
+// ### 样例输入 #1
+// ```
+// ab#c
+// ad#c
+// ```
+// ### 样例输出 #1
+// ```
+// true
+// ```
+// 解释：s 和 t 都会变成 "ac"。
+// ### 示例 2：
+// ### 样例输入 #2
+// ```
+// ab##
+// c#d#
+// ```
+// ### 样例输出 #2
+// ```
+// true
+// ```
+// 解释：s 和 t 都会变成 ""。
+// ### 示例 3：
+// ### 样例输入 #3
+// ```
+// a#c
+// b
+// ```
+// ### 样例输出 #3
+// ```
+// false
+// ```
+// 解释：s 会变成 "c"，但 t 仍然是 "b"。
+// ##  提示：
+// 1 <= s.length, t.length <= 200
+// s 和 t 只含有小写字母以及字符 '#'
+
+
+
+// #include<stdio.h>
+// #include<stdlib.h>
+// #include<string.h>
+// int chang(int i,char s[]){
+//     int ret=0;
+//     int h=i;
+//     while(s[--h]=='#');
+//     ret=i-h;
+//     return ret;
+// }
+
+// int turelong(int l,char s[]){
+//  int n=0;
+// for(int i=0 ;i<l ;i++){
+// if(i==0){
+//     if(s[i]=='#') 
+//     {while(s[i++]=='#') n++;
+// }
+// }else{
+//     if(s[i]=='#') n+=2;
+// }
+// }
+// // printf("%d ",l);
+// // printf("%d ",n);
+// // printf("%d \n",l-n);
+// return l-n;
+// }
+
+
+// int main(){
+// char s[200];
+// char t[200];
+// int ret=1;
+// scanf("%s",s);
+// scanf("%s",t);
+// int l1=strlen(s),l2=strlen(t);
+// printf("%d",l1);
+// if(turelong(l1,s)!=turelong(l2,t) ){
+//     printf("f1");//比较长度
+// }else{
+
+//     for(int i=l1-1,j=l2-1;i>=0 && j>+0 ;i--,j--){
+//         if(s[i]=='#'){
+//             int r=chang(i,s);
+//             //printf("%d",r);
+//             i-=2*r;
+//         }
+//         if(t[j]=='#'){
+//             int h=chang(j,t);
+//             j-=2*h;
+//         }
+//         if(s[i]!=t[j]){
+//             printf("f2");
+//             ret=0;
+//             break;
+//         }  }
+// if(ret) printf("ture");
+// }
+// return 0;
+// }
+
+
+// int n=0,n1=0;
+// for(int i=0 ;i<l1 ;i++){
+// if(i==0){
+//     if(s[i]=='#') n++;
+// }else{
+//     if(s[i]=='#') n+=2;
+// }
+// }
+// for(int i=0 ;i<l2 ;i++){
+// if(i==0){
+//     if(t[i]=='#') n1++;
+// }else{
+//     if(t[i]=='#') n1+=2;
+// }
+// }
+
+
+
+
+
+//
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 

@@ -129,7 +129,101 @@
 //         printf("%d\n",i);
 // }while(i<=150);
 //         return 0;
+// 
+
+
+//9.11
+
+// #include<stdio.h>
+// double min(double m,double n);
+// int main(){
+//   double m,n;
+//   scanf("%lf%lf",&m,&n);
+//   printf("%lf",min(m,n)); 
+//   return 0;
+
 // }
+
+// double min(double m,double n){
+//   double h;
+//   if(m>n) h=n;
+//   else h=m;
+//   return h;
+// }
+
+
+//9.11 2  看不懂题
+
+//9.11 3
+// #include<stdio.h>
+// void dayin(char a,int i,int j);
+// int main(){
+//   char b;
+//   int i,j;
+//   scanf("%c",&b);
+//   scanf("%d%d",&i,&j);
+//     dayin(b,i,j);
+//     return 0;
+// }
+// void dayin(char a,int i,int j){
+//   for(int n=0;n<i;n++){
+//     for(int m=0;m<j;m++ ){
+//       printf("%c",a);
+//     }
+//     printf("\n");
+//   }
+// }
+
+
+
+//9.11 4 调和平均数
+// #include<stdio.h>
+// double tiaohe(double m,double n);
+
+// int main(){
+//   double i,j;
+//   scanf("%lf%lf",&i,&j);
+//   printf("%lf",tiaohe(i,j));
+
+//   return 0;
+// }
+// double tiaohe(double m,double n){
+//   double ret;
+//   ret=1/((1/m+1/n)/2);
+//   return ret;
+// }
+
+
+//9.11 5
+// #include<stdio.h>
+// void bianda(double* h,double* g);
+// int main(void){
+//   double m,n;
+//   scanf("%lf%lf",&m,&n);
+//   bianda(&m,&n);
+//   printf("%lf %lf",m,n);
+
+
+//   return 0;
+// }
+
+// void bianda(double* h,double* g){
+//     if(*h>*g) *g=*h;
+//     else *h=*g;
+ 
+// }
+
+
+// 9.11 6
+
+// #include<stdio.h>
+
+
+// int main(){
+  
+// }
+
+
 
 //10.13
 // #include<stdio.h>
@@ -340,12 +434,5 @@
 
 //12.10
 
-#include<stdio.h>
-int main(){
-    int a;
-    scanf("%d",&a);
-    if(a%5==4 || a%5==0) printf("Drying in day %d",a);
-    else printf("Finshing in day %d",a);
-    return 0;
-    
-}
+
+

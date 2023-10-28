@@ -124,13 +124,106 @@
 // }
 
 //6.18
-#include<stdio.h>
-int main(){
-        int i=5;
-        do{
-        i=(i-1)*5;
-        printf("%d\n",i);
-}while(i<=150);
-        return 0;
+// #include<stdio.h>
+// int main(){
+//         int i=5;
+//         do{
+//         i=(i-1)*5;
+//         printf("%d\n",i);
+// }while(i<=150);
+//         return 0;
+// }
+
+
+// #include<stdio.h>
+
+// int baozha(int a){
+    
+// for(int i=0 ;i <3 ;i++){
+
+// a=baozha( a);
+// }
+// return a;
+// }
+// int main(){
+
+// int b=baozha(1);
+// printf("%d",b);
+// return 0;
+// // }
+
+// #include<stdio.h>
+// char* meila(int b){
+//     char *a=(char*)malloc(sizeof(char)*12);
+//     a="fdksf f";
+//    char b[2]="qq";
+//     //*(a+1)='c';
+//    b [10000000000]='2';
+
+// return a;
+
+
+// }
+// int main(){
+//     printf("%s\n",meila(1));
+
+//     return 0;
+
+// }
+
+// #include<stdio.h>
+// int main(){
+// int b=1;
+//     while(1)
+// {
+//     int n=(int *)malloc(sizeof(int)*10000);
+//     b++;
+// }
+// printf("%d",b);
+// free(a)
+// }
+
+
+// #include<stdio.h>
+// int main(){
+    
+// }
+    #include<stdlib.h>
+    #include<string.h>
+ #include<stdio.h>
+// #define SWAP(a, b, t) t = a; a = b; b = t
+// #define SQUARE(a) a *a
+// #define SWAPWHEN(a, b, t, cond) if (cond) SWAP(a, b, t)
+// int main() {
+//     int tmp;
+//     int x = 1;
+//     int y = 2;
+//     int z = 3;
+//     int w = 3;
+//     SWAP(x, y, tmp);//交换a,b
+//     printf("x = %d, y = %d, tmp = %d\n", x, y, tmp);//tmp等于a->1; 输出 ，2,1,1；
+//     if (x > y) SWAP(x, y, tmp);//又交换回去
+//     printf("x = %d, y = %d, tmp = %d\n", x, y, tmp);//1,2,2；
+//     SWAPWHEN(x, y, tmp, SQUARE(1 + 2 + z++ + ++w) == 100);//if(1+2+z++ +++w*1+2+z++ + ++w(等于1+2+3+4+2+4+5)) 
+//     printf("x = %d, y = %d\n",x,y);//2,2
+//     printf("z = %d, w = %d, tmp = %d\n", z, w, tmp);//5,5
+// }
+
+
+struct test1 {
+  int a;
+  short b;
+  double c;
+};
+struct test2 {
+  short b;
+  int a;
+  double c;
+};
+int main(void) {
+  struct test1 t1;
+  struct test2 t2;
+  printf("sizeof (t1) : %d\n", sizeof(t1));
+  printf("sizeof(t2): %d\n", sizeof(t2));
 }
 

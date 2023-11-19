@@ -55,6 +55,7 @@ int   zhongjie (Qui *a ,Qui *b ,int n){
                 (a+i)->ji  +=(a+j)->ji;
                 (a+i)->zhuo+=(a+j)->zhuo;
                 (a+j)->num=-1;
+                
             }
         }
     }
@@ -62,7 +63,6 @@ int   zhongjie (Qui *a ,Qui *b ,int n){
     for(int i =0 ;i < n ;i++){
         if((a+i)->num>=0){
             (a+i)->lv=((double)(a+i)->ji+(a+i)->chu+(a+i)->da+(a+i)->zhuo)/4;
-            ret++;
         }
     }
 return ret;
@@ -96,6 +96,8 @@ int main (int argc ,char *argv[]){
 
     return 0;
 }
+
+//输出发现 0 的问题 ，在第二个函数变为随机数；
 
 
 

@@ -16,7 +16,7 @@ int main(int argc ,char * argv[]){
     if((fb3=fopen(name ,"w"))==NULL){
         printf("dfso");
     }
-    char *s1 =puts(str1 ,256,)
+    char *s1 =puts(str1);
 
 
 

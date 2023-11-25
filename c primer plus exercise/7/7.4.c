@@ -15,3 +15,6 @@ printf("\n%d",count);
 return 0;
 
 }
+
+
+//为什么第一个判断没有用了

@@ -65,28 +65,36 @@ int mode(char *pathname)
         switch (sb->st_mode & S_IFMT)
         {
         case S_IFREG:
-            if(sb->st_mode & S_IXUSR) return 0;
+            if(sb->st_mode & S_IXUSR) {free(sb); return 0;} //可执行文件 
+            free(sb);
             return 1;
             break; // 常规文件
         case S_IFDIR:
+        free(sb);
             return 2;
             break; // 目录
         case S_IFCHR:
+        free(sb);
             return 3;
             break; // 字符设备
         case S_IFBLK:
+        free(sb);
             return 4;
             break; // 块设备
         case S_IFIFO:
+        free(sb);
             return 5;
             break; // FIFO 或管道
         case S_IFSOCK:
+        free(sb);
             return 6;
             break; // 套接字
         case S_IFLNK:
+        free(sb);
             return 7;
             break; // 符号链接
         default:
+        free(sb);
             return 8; // 不知道的类型
         };
     }
@@ -132,18 +140,6 @@ char *quanxian(struct stat *sb)// 输出权限记得free
 }
 
 
-
-
-
-// void ls_l(char *agrv){
-//     int  
-
-
-
-
-
-
-// }
 
 
 
@@ -229,15 +225,57 @@ void ls(char *agrv)
         direntd = readdir(dir);
         while (direntd != NULL)
         {
-            if (strcmp(direntd->d_name, ".") != 0 || strcmp(direntd->d_name, "..") != 0)
-                printf("%s  ", direntd->d_name);
+            if (strcmp(direntd->d_name, ".") != 0 && strcmp(direntd->d_name, "..") != 0)
+            if (mode(direntd->d_name) == 2)
+            {
+                yanse(direntd->d_name, 34);
+                printf("   ");
+            }
+            else if (mode(direntd->d_name) == 0)
+            {
+                yanse(direntd->d_name, 32);
+                printf("   ");
+            }
+            else
+                printf("%s   ", direntd->d_name);
             direntd = readdir(dir);
         }
     }
     printf("\n");
 }
 
+void ls_R(char *agrv){
+    static int hhhhhhhh=0;
+    
+    DIR *dir =opendir(agrv);
+    struct dirent *direntd;
+    int h=mode(agrv);
+    if(hhhhhhhh == 0){
+    printf(".:\n");
+   } 
+   ls(agrv);
+    hhhhhhhh++;
+    printf("\n");
+    while((direntd =readdir(dir)) != NULL){
+        char path2[1000];
+        strcpy(path2,agrv);
+        strcat(path2,"/");
+        strcat(path2,direntd->d_name);
+        if(strcmp(direntd->d_name , ".")!=0 && strcmp(direntd->d_name, "..")!= 0 &&  mode(path2)==2){
+            printf("%s/%s:\n",agrv,direntd->d_name);
+             //把agrv/往后推
+            char path[1000];
+            strcpy(path,agrv);
+            strcat(path,"/");
+            strcat(path,direntd->d_name);
+            
+            if(mode(path)==2){
+                ls_R(path);
+            }
 
+        }
+    }
+}
 
 
 
@@ -266,13 +304,13 @@ int main(int agrc, char *agrv[])
     // {
     //     help();
     // }
-
+     // ls_R("..");
      if(agrc ==1) {ls("."); return 0;}
 
      char canshu[10];
      char * mulu[10];
      int count=0;
-     
+     int count2=0;
      if(agrc >= 2){
         for(int i=0 ;i < agrc ;i++ ){
             if(agrv[i][0] == '-'){
@@ -283,36 +321,42 @@ int main(int agrc, char *agrv[])
                         canshu[count]=agrv[i][j];
                         count++;}
                         else {
-                            printf("ls: 请尝试执行 "ls --help" 来获取更多信息。\n");
+                            printf("ls: 请尝试执行 \"ls --help\" 来获取更多信息。\n");
                             return 0;
                         }
                     }
             }else {
-                DIR *dir;
-                dir = opendir(agrv);
-                if (dir == NULL)
-                {
-                 if( open(agrv,O_RDONLY) == -1){
-                  perror("open1");
-                     }
-                  else {
-                     printf("%s\n",agrv);
-                       return;
-                    }
-                 }
-
-
-
-
-
+            int h=mode(agrv[i]);
+            if(h==-1){
+                printf("ls: 无法访问 '%s': 没有那个文件或目录\n",agrv[i]);
             }
+            else {
+                strcpy(agrv[i],mulu[count2]);
+                count2++;
             }
         }
+        }
+  
+        //纪录命令行
+        if(count2==0){
+            ls(".");
+        }else{
+            for(int i=0 ;i < count2 ; i++ ){
+                printf("%s:\n",mulu[i]);
+            
+            }
+        }
+
+
      }
 
-
-
-
-
-
 }
+
+
+
+
+
+
+
+
+

@@ -24,6 +24,7 @@ char *quanxian(struct stat *sb);// 输出权限
 char *path();
 int zhongji(char *path);//求总内存
 
+int zimu[56]={0};
 
 // 输出help
 void help(void)
@@ -104,6 +105,18 @@ int mode(char *pathname)
         return -1;
     }
 }
+
+char mode2(int i){
+    if(i == 1 || i==0) return'-';
+    if(i==2) return 'd';
+    if(i==3) return 'c';
+    if(i==4) return 'b';
+    if(i==5) return 'p';
+    if(i==6) return 's';
+    if(i==7) return '|';  
+     return '*';
+    }
+
 
 
 char *quanxian(struct stat *sb)// 输出权限记得free
@@ -204,7 +217,7 @@ void ls_a(char *agrv)
     printf("\n");
 }
 
-// //
+// //               
 void ls(char *agrv)
 {
     DIR *dir;
@@ -224,8 +237,29 @@ void ls(char *agrv)
     {
         direntd = readdir(dir);
         while (direntd != NULL)
-        {
-            if (strcmp(direntd->d_name, ".") != 0 && strcmp(direntd->d_name, "..") != 0)
+        {   
+            if (zimu['a'-'A'] == 1 || (strcmp(direntd->d_name, ".") != 0 && strcmp(direntd->d_name, "..") != 0)){
+            struct stat sb ;
+            char pathname[100];
+            strcpy(agrv,pathname);
+            strcat("/",pathname);
+            strcat(direntd->d_name,pathname);
+            stat(pathname, &sb);
+            
+            if(zimu['i'-'A']==1) {  
+                printf("%d    ",sb.st_ino);
+            }
+
+            //输出i节点
+            if(zimu['l'-'A']==1){
+                printf("%c",mode2(mode(pathname)));
+                printf("%s ",quanxian(&sb));
+                printf("%d ",sb.st_nlink);
+                printf("%s ",sb.st_uid);
+                printf("%s ",sb.st_gid);
+                printf("%7d ",sb.st_size);
+                printf("%%");
+            }
             if (mode(direntd->d_name) == 2)
             {
                 yanse(direntd->d_name, 34);
@@ -239,7 +273,7 @@ void ls(char *agrv)
             else
                 printf("%s   ", direntd->d_name);
             direntd = readdir(dir);
-        }
+        }}
     }
     printf("\n");
 }
@@ -288,8 +322,6 @@ void ls_R(char *agrv){
 
 
 
-
-
 int main(int agrc, char *agrv[])
 {
     // if (agrc == 2 && !strcmp(agrv[1], "-a"))
@@ -304,10 +336,8 @@ int main(int agrc, char *agrv[])
     // {
     //     help();
     // }
-     // ls_R("..");
      if(agrc ==1) {ls("."); return 0;}
 
-     char canshu[10];
      char * mulu[10];
      int count=0;
      int count2=0;
@@ -318,7 +348,7 @@ int main(int agrc, char *agrv[])
                     {   
                         if(agrv[i][j]=='r' || agrv[i][j]=='l' || agrv[i][j]=='R' || agrv[i][j]=='t' || agrv[i][j] =='a' || agrv[i][j]=='i' ||agrv[i][j] =='s'){
                         
-                        canshu[count]=agrv[i][j];
+                        zimu[agrv[i][j]-'A']=1;
                         count++;}
                         else {
                             printf("ls: 请尝试执行 \"ls --help\" 来获取更多信息。\n");
@@ -343,7 +373,7 @@ int main(int agrc, char *agrv[])
         }else{
             for(int i=0 ;i < count2 ; i++ ){
                 printf("%s:\n",mulu[i]);
-            
+
             }
         }
 

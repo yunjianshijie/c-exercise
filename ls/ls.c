@@ -290,7 +290,7 @@ void ls(char *agrv)
             direntd = readdir(dir);
          printf("\n");
         }
-         
+
         }
       printf("\n");
   
@@ -340,7 +340,7 @@ void ls_R(char *agrv){
 
 
 
-int main(int agrc, char *agrv[])
+int main(int argc, char *argv[])
 {
     // if (agrc == 2 && !strcmp(agrv[1], "-a"))
     // {
@@ -354,20 +354,20 @@ int main(int agrc, char *agrv[])
     // {
     //     help();
     // }
-     if(agrc ==1) {ls("."); return 0;}
-     char * mulu[10];
+     if(argc ==1) {ls("."); return 0;}
+     char  mulu[100][256];
      int count=0;
      int count2=0;
-     if(agrc >= 2){
-        for(int i=1 ;i < agrc ;i++ ){ 
+     if(argc >= 2){
+        for(int i=1 ;i < argc ;i++ ){ 
             
-            if(agrv[i][0] == '-'){
+            if(argv[i][0] == '-'){
              
-                for(int j=1 ;j<strlen(agrv[i]) ;j++)
+                for(int j=1 ;j<strlen(argv[i]) ;j++)
                     {   
-                        if(agrv[i][j]=='r' || agrv[i][j]=='l' || agrv[i][j]=='R' || agrv[i][j]=='t' || agrv[i][j] =='a' || agrv[i][j]=='i' ||agrv[i][j] =='s'){
+                        if(argv[i][j]=='r' || argv[i][j]=='l' || argv[i][j]=='R' || argv[i][j]=='t' || argv[i][j] =='a' || argv[i][j]=='i' ||argv[i][j] =='s'){
                         
-                        zimu[agrv[i][j]-'A']=1;
+                        zimu[argv[i][j]-'A']=1;
                         count++;}
                         else {
                             printf("ls: 请尝试执行 \"ls --help\" 来获取更多信息。\n");
@@ -375,37 +375,30 @@ int main(int agrc, char *agrv[])
                         }
                     }
             }else {
-            int h=mode(agrv[i]);
+            int h=mode(argv[i]);
             if(h==-1){
-                printf("ls: 无法访问 '%s': 没有那个文件或目录\n",agrv[i]);
+                printf("ls: 无法访问 '%s': 没有那个文件或目录\n",argv[i]);
             }
             else {
-                strcpy(agrv[i],mulu[count2]);
+                strcpy(mulu[count2],argv[i]);
                 count2++;
             }
         }
         }
-  
+
         //纪录命令行
         if(count2==0){
             ls(".");
         }else{
             for(int i=0 ;i < count2 ; i++ ){
                 printf("%s:\n",mulu[i]);
-
+                if(zimu['R'-'A']==1) {ls_R(mulu[i]); continue;}
+                ls(mulu[i]);
             }
+
         }
-
-
      }
 
 }
-
-
-
-
-
-
-
 
 

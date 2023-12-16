@@ -297,16 +297,15 @@ void ls(char *agrv)
 }
 
 void ls_R(char *agrv){
-    static int hhhhhhhh=0;
-    
-    DIR *dir =opendir(agrv);
-    struct dirent *direntd;
+    static int h3 =0;
     int h=mode(agrv);
-    if(hhhhhhhh == 0){
+    if(h3 == 0){
+    DIR *dir =opendir(agrv);
+    struct dirent *direntd
     printf(".:\n");
    } 
    ls(agrv);
-    hhhhhhhh++;
+    h3++;
     printf("\n");
     while((direntd =readdir(dir)) != NULL){
         char path2[1000];
@@ -316,11 +315,11 @@ void ls_R(char *agrv){
         if(strcmp(direntd->d_name , ".")!=0 && strcmp(direntd->d_name, "..")!= 0 &&  mode(path2)==2){
             printf("%s/%s:\n",agrv,direntd->d_name);
              //把agrv/往后推
-            char path[1000];
+            char path[256];
             strcpy(path,agrv);
             strcat(path,"/");
             strcat(path,direntd->d_name);
-            
+
             if(mode(path)==2){
                 ls_R(path);
             }

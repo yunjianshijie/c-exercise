@@ -269,8 +269,8 @@ void ls(char *agrv)
                 printf("%c",mode2(mode(pathname)));
                 printf("%s ",quanxian(&sb));
                 printf("%d ",sb.st_nlink);
-                //printf("%s ",sb.st_uid);
-                //printf("%s ",sb.st_gid);
+                printf("%ld ",sb.st_uid);
+                printf("%ld ",(long)sb.st_gid);
                 printf("%7d ",sb.st_size);
                 printf("%%  ");
             } // l参数

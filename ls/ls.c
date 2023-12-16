@@ -13,8 +13,25 @@
 #include <time.h>
 #include <pwd.h>
 #include <grp.h>
-#include "ls.h"
 
+
+enum Color {
+        BLACK = 30,
+        RED = 31,
+        GREEN = 32,
+        BROWN = 33,
+        BLUE = 34,
+        MAGENTA = 35,
+        CYAN = 36,
+        GREY = 37,
+        LRED = 41,
+        LGREEN = 42,
+        YELLOW = 43,
+        LBLUE = 44,
+        LMAGENTA = 45,
+        LCYAN = 46,
+        WHITE = 47,
+        };
 
 // 函数声明
 void help(void);              // 输出help 内容
@@ -65,7 +82,7 @@ int mode(char *pathname)
     {
         switch (sb->st_mode & S_IFMT)
         {
-        case S_IFREG:
+        case S_IFREG :
             if(sb->st_mode & S_IXUSR) {free(sb); return 0;} //可执行文件 
             free(sb);
             return 1;
@@ -148,13 +165,9 @@ char *quanxian(struct stat *sb)// 输出权限记得free
     }else a[7]='-';
     if(sb->st_mode & S_IXOTH){
         a[8]='x';
-    }else a[9]='-';
+    }else a[8]='-';
     return a;
 }
-
-
-
-
 
 
 
@@ -237,13 +250,14 @@ void ls(char *agrv)
     {
         direntd = readdir(dir);
         while (direntd != NULL)
-        {   
-            if (zimu['a'-'A'] == 1 || (strcmp(direntd->d_name, ".") != 0 && strcmp(direntd->d_name, "..") != 0)){
+        {   if(zimu['a'-'A'] = 1){
+            if ((strcmp(direntd->d_name, ".") == 0 && strcmp(direntd->d_name, "..") == 0)) continue;}
+            
             struct stat sb ;
             char pathname[100];
-            strcpy(agrv,pathname);
-            strcat("/",pathname);
-            strcat(direntd->d_name,pathname);
+            strcpy(pathname,agrv);
+            strcat(pathname,"/");
+            strcat(pathname,direntd->d_name);
             stat(pathname, &sb);
             
             if(zimu['i'-'A']==1) {  
@@ -255,11 +269,12 @@ void ls(char *agrv)
                 printf("%c",mode2(mode(pathname)));
                 printf("%s ",quanxian(&sb));
                 printf("%d ",sb.st_nlink);
-                printf("%s ",sb.st_uid);
-                printf("%s ",sb.st_gid);
+                //printf("%s ",sb.st_uid);
+                //printf("%s ",sb.st_gid);
                 printf("%7d ",sb.st_size);
-                printf("%%");
-            }
+                printf("%%  ");
+            } // l参数
+
             if (mode(direntd->d_name) == 2)
             {
                 yanse(direntd->d_name, 34);
@@ -273,9 +288,12 @@ void ls(char *agrv)
             else
                 printf("%s   ", direntd->d_name);
             direntd = readdir(dir);
-        }}
-    }
-    printf("\n");
+         printf("\n");
+        }
+         
+        }
+      printf("\n");
+  
 }
 
 void ls_R(char *agrv){
@@ -337,13 +355,14 @@ int main(int agrc, char *agrv[])
     //     help();
     // }
      if(agrc ==1) {ls("."); return 0;}
-
      char * mulu[10];
      int count=0;
      int count2=0;
      if(agrc >= 2){
-        for(int i=0 ;i < agrc ;i++ ){
+        for(int i=1 ;i < agrc ;i++ ){ 
+            
             if(agrv[i][0] == '-'){
+             
                 for(int j=1 ;j<strlen(agrv[i]) ;j++)
                     {   
                         if(agrv[i][j]=='r' || agrv[i][j]=='l' || agrv[i][j]=='R' || agrv[i][j]=='t' || agrv[i][j] =='a' || agrv[i][j]=='i' ||agrv[i][j] =='s'){

@@ -2,6 +2,7 @@
 
 // ls
 
+#include <ctype.h>
 #include <dirent.h>
 #include <fcntl.h>
 #include <grp.h>
@@ -17,7 +18,7 @@
 struct sb {
     int alloc;
     char str[257];
-    struct sb* hh;
+    struct sb* next;
 };
 
 enum Color {
@@ -46,6 +47,7 @@ char* quanxian(struct stat* sb);  // 输出权限
 char* path();
 int zhongji(char* path);  // 求总内存
 int zimu[56] = {0};
+int compare(const void* a, const void* b);  // 排序的顺序
 
 // 输出help
 void help(void) {
@@ -117,7 +119,7 @@ int mode(char* pathname) {
             default:
                 free(sb);
                 return 8;  // 不知道的类型
-        };
+        }
     } else {
         free(sb);
         return -1;
@@ -185,38 +187,57 @@ char* quanxian(struct stat* sb)  // 输出权限记得free
     return a;
 }
 
-// void cmp(cah)
+// void ls_a(char* agrv) {
+//     DIR* dir;
+//     struct dirent* direntd;
+//     dir = opendir(agrv);
+//     if (dir == NULL) {
+//         if (open(agrv, O_RDONLY) == -1) {
+//             perror("open1");
+//         } else {
+//             printf("%s\n", agrv);
+//             return;
+//         }
+//     } else {
+//         direntd = readdir(dir);
+//         while (direntd != NULL) {
+//             if (mode(direntd->d_name) == 2) {
+//                 yanse(direntd->d_name, 34);
+//                 printf("   ");
+//             } else if (mode(direntd->d_name) == 0) {
+//                 yanse(direntd->d_name, 32);
+//                 printf("   ");
+//             } else
+//                 printf("%s   ", direntd->d_name);
+//             direntd = readdir(dir);
+//         }
+//     }
+//     printf("\n");
+// }
 
-void ls_a(char* agrv) {
-    DIR* dir;
-    struct dirent* direntd;
-    dir = opendir(agrv);
-    if (dir == NULL) {
-        if (open(agrv, O_RDONLY) == -1) {
-            perror("open1");
-        } else {
-            printf("%s\n", agrv);
-            return;
-        }
-    } else {
-        direntd = readdir(dir);
-        while (direntd != NULL) {
-            if (mode(direntd->d_name) == 2) {
-                yanse(direntd->d_name, 34);
-                printf("   ");
-            } else if (mode(direntd->d_name) == 0) {
-                yanse(direntd->d_name, 32);
-                printf("   ");
-            } else
-                printf("%s   ", direntd->d_name);
-            direntd = readdir(dir);
-        }
-    }
-    printf("\n");
+// void cmp(cah)
+int compare(const void* a, const void* b) {
+    const char* str1 = *(const char**)a;
+    const char* str2 = *(const char**)b;
+
+    // // 将字符转换为小写进行比较
+    // char lower1 = tolower(str1[0]);
+    // char lower2 = tolower(str2[0]);
+
+    // // 根据 AaBbCcDd 的顺序进行比较
+    // if (lower1 == lower2)
+    //     return strcmp(str1, str2);
+    // else
+    //     return lower1 - lower2;
+    return strcmp(str1, str2);
 }
 
-// //
-void ls(char* agrv) {
+//
+int ls(char* agrv) {
+    // printf("这里是ls");
+    char* path[1000];
+    int count = 0;
+    int ret = 0;
     DIR* dir;
     struct dirent* direntd;
     dir = opendir(agrv);
@@ -225,29 +246,39 @@ void ls(char* agrv) {
             perror("open1");
         } else {
             printf("%s\n", agrv);
-            return;
+            return 0;
         }
     } else {
         direntd = readdir(dir);
         while (direntd != NULL) {
-            if (zimu['a' - 'A'] = 1) {
-                if ((strcmp(direntd->d_name, ".") == 0 &&
-                     strcmp(direntd->d_name, "..") == 0))
+            if (zimu['a' - 'A'] != 1) {
+                if ((strcmp(direntd->d_name, ".") == 0 ||
+                     strcmp(direntd->d_name, "..") == 0) ||
+                    direntd->d_name[0] == '.') {
+                    direntd = readdir(dir);
                     continue;
+                } else {
+                    path[count] = (char*)malloc(sizeof(char) * 256);
+                    strcpy(path[count], direntd->d_name);
+                    count++;
+                    direntd = readdir(dir);
+                }
             }
+        }
 
+        qsort(path, count + 1, sizeof(char*), compare);  // 排序
+        for (int i = 0; i < count; i++) {
             struct stat sb;
-            char pathname[100];
+            char pathname[256];
             strcpy(pathname, agrv);
             strcat(pathname, "/");
-            strcat(pathname, direntd->d_name);
+            strcat(pathname, path[i]);
             stat(pathname, &sb);
 
             if (zimu['i' - 'A'] == 1) {
                 printf("%4d    ", sb.st_ino);
-            }
+            }  // 输出i节点
 
-            // 输出i节点
             if (zimu['l' - 'A'] == 1) {
                 printf("%c", mode2(mode(pathname)));
                 printf("%s ", quanxian(&sb));
@@ -263,55 +294,91 @@ void ls(char* agrv) {
                 time_t mt = sb.st_mtime;
 
                 printf("%12s", ctime(&mt));
-                printf("\b%%  ");
+                printf("  ");
             }  // l参数
 
-            if (mode(direntd->d_name) == 2) {
-                yanse(direntd->d_name, 34);
+            if (mode(pathname) == 2) {
+                yanse(path[i], 34);
                 printf("   ");
-            } else if (mode(direntd->d_name) == 0) {
-                yanse(direntd->d_name, 32);
+                ret = 1;
+            } else if (mode(pathname) == 0) {
+                yanse(path[i], 32);
                 printf("   ");
             } else
-                printf("%s   ", direntd->d_name);
+                printf("%s   ", path[i]);
             direntd = readdir(dir);
             printf("\n");
         }
     }
     printf("\n");
+    for (int i = 0; i < count; i++) {
+        free(path[i]);
+    }
+    return ret;
 }
 
-void ls_R(char* agrv) {
-    static int h3 = 0;
-    int h = mode(agrv);
-    DIR* dir = opendir(agrv);
-    struct dirent* direntd;
-    if (h3 == 0) {
-        printf(".:\n");
-    }
-    ls(agrv);
-    h3++;
-    printf("\n");
-    while ((direntd = readdir(dir)) != NULL) {
-        char path2[1000];
-        strcpy(path2, agrv);
-        strcat(path2, "/");
-        strcat(path2, direntd->d_name);
-        if (strcmp(direntd->d_name, ".") != 0 &&
-            strcmp(direntd->d_name, "..") != 0 && mode(path2) == 2) {
-            printf("%s/%s:\n", agrv, direntd->d_name);
-            // 把agrv/往后推
-            char path[1000];
-            strcpy(path, agrv);
-            strcat(path, "/");
-            strcat(path, direntd->d_name);
+// void ls_R1(char* agrv) {
+//     static int h3 = 0;
+//     DIR* dir = opendir(agrv);
+//     struct dirent* direntd;
+//     if (h3 == 0) {
+//         printf(".:\n");
+//     }
+//     ls(agrv);
+//     h3++;
+//     printf("\n");
+//     while ((direntd = readdir(dir)) != NULL) {
+//         char path2[257];
+//         strcpy(path2, agrv);
+//         strcat(path2, "/");
+//         strcat(path2, direntd->d_name);
+//         if (strcmp(direntd->d_name, ".") != 0 &&
+//             strcmp(direntd->d_name, "..") != 0 && mode(path2) == 2) {
+//             printf("%s/%s:\n", agrv, direntd->d_name);
+//             // 把agrv/往后推
+//             char path[257];
+//             strcpy(path, agrv);
+//             strcat(path, "/");
+//             strcat(path, direntd->d_name);
 
-            if (mode(path) == 2) {
-                ls_R(path);
+//             if (mode(path) == 2) {
+//                 ls_R1(path);
+//             }
+//         }
+//     }
+// }
+
+void ls_R(char* a) {
+    static int h3 = 0;
+
+    printf("这里是R%d\n", ++h3);
+    if (h3 == 1)
+        printf(".:\n");
+    struct sb* ji = (struct sb*)malloc(sizeof(struct sb));
+    strcpy(ji->str, a);
+    if (ls(a) == 0) {
+        // free(ji);
+    } else {
+        DIR* dir = opendir(a);
+        struct dirent* direntd;
+        while ((direntd = readdir(dir)) != NULL) {
+            char* path2 = (char*)malloc(sizeof(char) * 257);
+            strcpy(path2, a);
+            strcat(path2, "/");
+            strcat(path2, direntd->d_name);
+            if (strcmp(direntd->d_name, ".") != 0 &&
+                strcmp(direntd->d_name, "..") != 0 && mode(path2) == 2) {
+                printf("%s/%s:\n", a, direntd->d_name);
+                // free(ji);
+                ls_R(path2);
+            } else {
+                // free(path2);
             }
         }
     }
 }
+
+// void cmp(char * )
 
 int main(int argc, char* argv[]) {
     // if (agrc == 2 && !strcmp(agrv[1], "-a"))
@@ -343,6 +410,7 @@ int main(int argc, char* argv[]) {
                         argv[i][j] == 'a' || argv[i][j] == 'i' ||
                         argv[i][j] == 's') {
                         zimu[argv[i][j] - 'A'] = 1;
+                        // printf("%d", zimu['R' - 'A']);
                         count++;
                     } else {
                         printf(
@@ -363,15 +431,18 @@ int main(int argc, char* argv[]) {
 
         // 纪录命令行
         if (count2 == 0) {
-            ls(".");
+            if (zimu['R' - 'A'] == 1)
+                ls_R(".");
+            else
+                ls(".");
         } else {
             for (int i = 0; i < count2; i++) {
                 printf("%s:\n", mulu[i]);
                 if (zimu['R' - 'A'] == 1) {
                     ls_R(mulu[i]);
                     continue;
-                }
-                ls(mulu[i]);
+                } else
+                    ls(mulu[i]);
             }
         }
     }

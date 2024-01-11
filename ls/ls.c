@@ -74,7 +74,7 @@ void yanse(char* arr, int i) {
         printf("\033[01;34m%s\033[0m", arr);
     if (i == 32)  // 绿色
         printf("\033[01;32m%s\033[0m", arr);
-    if (i == 31)
+    if (i == 31)  // 红色
         printf("\031[01;32m%s\031[0m", arr);
 }
 
@@ -216,9 +216,9 @@ char* quanxian(struct stat* sb)  // 输出权限记得free
 // }
 
 // void cmp(cah)
-int compare(const void* a, const void* b) {
-    const char* str1 = *(const char**)a;
-    const char* str2 = *(const char**)b;
+int compare1(const void* a, const void* b) {
+    char* str1 = *(char**)a;
+    char* str2 = *(char**)b;
 
     // // 将字符转换为小写进行比较
     // char lower1 = tolower(str1[0]);
@@ -231,11 +231,16 @@ int compare(const void* a, const void* b) {
     //     return lower1 - lower2;
     return strcmp(str1, str2);
 }
+int compare2(const void* a, const void* b) {
+    char* str1 = *(char**)a;
+    char* str2 = *(char**)b;
+    return -strcmp(str1, str2);
+}
 
 //
 int ls(char* agrv) {
     // printf("这里是ls");
-    char* path[1000];
+    char* path[100000];
     int count = 0;
     int ret = 0;
     DIR* dir;
@@ -265,8 +270,9 @@ int ls(char* agrv) {
                 }
             }
         }
+        printf("%d", count);
+        qsort(path, count, sizeof(char*), compare1);  // 排序
 
-        qsort(path, count + 1, sizeof(char*), compare);  // 排序
         for (int i = 0; i < count; i++) {
             struct stat sb;
             char pathname[256];
@@ -285,8 +291,8 @@ int ls(char* agrv) {
                 printf("%d ", sb.st_nlink);
                 struct passwd* pwd = getpwuid(sb.st_uid);
                 printf("%10s ", pwd->pw_name);
-                struct group* grp = getgrgid(sb.st_gid);
-                printf("%10s ", grp->gr_name);
+                // struct group* grp = getgrgid(sb.st_gid);
+                // printf("%10s ", grp->gr_name);
                 // printf("%4ld ",sb.st_uid);
                 // printf("%4ld ",(long)sb.st_gid);
                 printf("%7d ", sb.st_size);
@@ -296,13 +302,16 @@ int ls(char* agrv) {
                 printf("%12s", ctime(&mt));
                 printf("  ");
             }  // l参数
-
-            if (mode(pathname) == 2) {
+            int hh = mode(pathname);
+            if (hh == 2) {
                 yanse(path[i], 34);
                 printf("   ");
                 ret = 1;
-            } else if (mode(pathname) == 0) {
+            } else if (hh == 0) {
                 yanse(path[i], 32);
+                printf("   ");
+            } else if (hh == 7) {
+                yanse(path[i], 31);
                 printf("   ");
             } else
                 printf("%s   ", path[i]);
@@ -310,44 +319,39 @@ int ls(char* agrv) {
             printf("\n");
         }
     }
+    closedir(dir);
     printf("\n");
     for (int i = 0; i < count; i++) {
         free(path[i]);
     }
     return ret;
 }
-
-// void ls_R1(char* agrv) {
-//     static int h3 = 0;
-//     DIR* dir = opendir(agrv);
-//     struct dirent* direntd;
-//     if (h3 == 0) {
-//         printf(".:\n");
-//     }
-//     ls(agrv);
-//     h3++;
-//     printf("\n");
-//     while ((direntd = readdir(dir)) != NULL) {
-//         char path2[257];
-//         strcpy(path2, agrv);
-//         strcat(path2, "/");
-//         strcat(path2, direntd->d_name);
-//         if (strcmp(direntd->d_name, ".") != 0 &&
-//             strcmp(direntd->d_name, "..") != 0 && mode(path2) == 2) {
-//             printf("%s/%s:\n", agrv, direntd->d_name);
-//             // 把agrv/往后推
-//             char path[257];
-//             strcpy(path, agrv);
-//             strcat(path, "/");
-//             strcat(path, direntd->d_name);
-
-//             if (mode(path) == 2) {
-//                 ls_R1(path);
-//             }
-//         }
-//     }
-// }
-
+// 循环
+void ls_R1(char* a) {
+    printf("这里是R\n");
+    printf(".:\n");
+    char str[257];
+    strcpy(str, a);
+    while (1) {
+        if (ls(a) != 0) {
+            DIR* dir = opendir(a);
+            struct dirent* direntd;
+            while ((direntd = readdir(dir)) != NULL) {
+                char path2[257];
+                strcpy(path2, a);
+                strcat(path2, "/");
+                strcat(path2, direntd->d_name);
+                if (strcmp(direntd->d_name, ".") != 0 &&
+                    strcmp(direntd->d_name, "..") && mode(path2) == 2) {
+                    printf("%s:", path2);
+                    strcpy(a, path2);
+                    break;
+                }
+            }
+        }
+    }
+}
+// 递归
 void ls_R(char* a) {
     static int h3 = 0;
 
@@ -370,9 +374,11 @@ void ls_R(char* a) {
                 strcmp(direntd->d_name, "..") != 0 && mode(path2) == 2) {
                 printf("%s/%s:\n", a, direntd->d_name);
                 // free(ji);
+
                 ls_R(path2);
             } else {
-                // free(path2);
+                // closedir(dir);
+                //  free(path2);
             }
         }
     }

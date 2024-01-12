@@ -231,6 +231,7 @@ int compare1(const void* a, const void* b) {
     //     return lower1 - lower2;
     return strcmp(str1, str2);
 }
+
 int compare2(const void* a, const void* b) {
     char* str1 = *(char**)a;
     char* str2 = *(char**)b;
@@ -271,7 +272,10 @@ int ls(char* agrv) {
             }
         }
         printf("%d", count);
-        qsort(path, count, sizeof(char*), compare1);  // 排序
+        if (zimu['a' - 'A'] >= 0) {
+            qsort(path, count, sizeof(char*), compare2);
+        } else
+            qsort(path, count, sizeof(char*), compare1);  // 排序
 
         for (int i = 0; i < count; i++) {
             struct stat sb;

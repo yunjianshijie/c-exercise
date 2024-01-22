@@ -81,8 +81,7 @@ void yanse(char* arr, int i) {
 // 判断文件类型
 int mode(char* pathname) {
     struct stat* sb = (struct stat*)malloc(sizeof(struct stat));
-
-    if (stat(pathname, sb) == 0) {
+    if (lstat(pathname, sb) == 0) {
         switch (sb->st_mode & __S_IFMT) {
             case __S_IFREG:
                 if (sb->st_mode & S_IXUSR) {
@@ -92,6 +91,10 @@ int mode(char* pathname) {
                 free(sb);
                 return 1;
                 break;  // 常规文件
+            case __S_IFLNK:
+                free(sb);
+                return 7;  // 链接
+                break;
             case __S_IFDIR:
                 free(sb);
                 return 2;
@@ -112,10 +115,6 @@ int mode(char* pathname) {
                 free(sb);
                 return 6;
                 break;  // 套接字
-            case __S_IFLNK:
-                free(sb);
-                return 7;
-                break;  // 符号链接
             default:
                 free(sb);
                 return 8;  // 不知道的类型
@@ -187,34 +186,6 @@ char* quanxian(struct stat* sb)  // 输出权限记得free
     return a;
 }
 
-// void ls_a(char* agrv) {
-//     DIR* dir;
-//     struct dirent* direntd;
-//     dir = opendir(agrv);
-//     if (dir == NULL) {
-//         if (open(agrv, O_RDONLY) == -1) {
-//             perror("open1");
-//         } else {
-//             printf("%s\n", agrv);
-//             return;
-//         }
-//     } else {
-//         direntd = readdir(dir);
-//         while (direntd != NULL) {
-//             if (mode(direntd->d_name) == 2) {
-//                 yanse(direntd->d_name, 34);
-//                 printf("   ");
-//             } else if (mode(direntd->d_name) == 0) {
-//                 yanse(direntd->d_name, 32);
-//                 printf("   ");
-//             } else
-//                 printf("%s   ", direntd->d_name);
-//             direntd = readdir(dir);
-//         }
-//     }
-//     printf("\n");
-// }
-
 // void cmp(cah)
 int compare1(const void* a, const void* b) {
     char* str1 = *(char**)a;
@@ -239,7 +210,7 @@ int compare2(const void* a, const void* b) {
 }
 
 //
-int ls(char* agrv) {
+int ls(char* agrv) {  // struct duilei* zhan
     // printf("这里是ls");
     char* path[100000];
     int count = 0;
@@ -248,10 +219,12 @@ int ls(char* agrv) {
     struct dirent* direntd;
     dir = opendir(agrv);
     if (dir == NULL) {
-        if (open(agrv, O_RDONLY) == -1) {
-            perror("open1");
+        int fd;
+        if ((fd = open(agrv, O_RDONLY)) == -1) {
+            printf(" 无法打开目录 '%s': 权限不够\n", agrv);
         } else {
             printf("%s\n", agrv);
+            close(fd);
             return 0;
         }
     } else {
@@ -264,14 +237,14 @@ int ls(char* agrv) {
                     direntd = readdir(dir);
                     continue;
                 } else {
-                    path[count] = (char*)malloc(sizeof(char) * 256);
+                    path[count] = (char*)malloc(sizeof(char) * 456);
                     strcpy(path[count], direntd->d_name);
                     count++;
                     direntd = readdir(dir);
                 }
             }
         }
-        printf("%d", count);
+        // printf("%d", count);
         if (zimu['a' - 'A'] >= 0) {
             qsort(path, count, sizeof(char*), compare2);
         } else
@@ -279,7 +252,7 @@ int ls(char* agrv) {
 
         for (int i = 0; i < count; i++) {
             struct stat sb;
-            char pathname[256];
+            char pathname[2456];
             strcpy(pathname, agrv);
             strcat(pathname, "/");
             strcat(pathname, path[i]);
@@ -308,14 +281,14 @@ int ls(char* agrv) {
             }  // l参数
             int hh = mode(pathname);
             if (hh == 2) {
-                yanse(path[i], 34);
+                yanse(path[i], 34);  // 蓝色
                 printf("   ");
                 ret = 1;
             } else if (hh == 0) {
-                yanse(path[i], 32);
+                yanse(path[i], 32);  // 绿色
                 printf("   ");
             } else if (hh == 7) {
-                yanse(path[i], 31);
+                yanse(path[i], 31);  // 红色
                 printf("   ");
             } else
                 printf("%s   ", path[i]);
@@ -331,30 +304,76 @@ int ls(char* agrv) {
     return ret;
 }
 // 循环
+struct duilei {
+    char str[5000][500];
+    int top;
+};
+
 void ls_R1(char* a) {
-    printf("这里是R\n");
+    struct duilei dui;
+    int aa = 1;
+    dui.top = 1;
+    // printf("这里是R\n");
     printf(".:\n");
-    char str[257];
-    strcpy(str, a);
-    while (1) {
-        if (ls(a) != 0) {
-            DIR* dir = opendir(a);
+
+    // printf("1%d\n", dui.top);
+    strcpy(dui.str[dui.top - 1], a);
+    // printf("2\n");
+    do {
+        // printf("hasdj");
+        printf("%s:\n", dui.str[dui.top - 1]);
+        int panduan = ls(dui.str[--dui.top]);  // ls返回值为是否有目录
+        // dui.top--;
+        if (panduan) {
+            char str[457];
+            strcpy(str, dui.str[dui.top]);
+            DIR* dir = opendir(dui.str[dui.top]);
+            // printf("%s", dui.str[dui.top]);
             struct dirent* direntd;
-            while ((direntd = readdir(dir)) != NULL) {
-                char path2[257];
-                strcpy(path2, a);
-                strcat(path2, "/");
-                strcat(path2, direntd->d_name);
-                if (strcmp(direntd->d_name, ".") != 0 &&
-                    strcmp(direntd->d_name, "..") && mode(path2) == 2) {
-                    printf("%s:", path2);
-                    strcpy(a, path2);
-                    break;
-                }
+            if (dir == NULL) {
+                printf("无权限");
+                dui.top--;
+                continue;
             }
+            // 进栈
+            direntd = readdir(dir);
+            int h = 0;
+            while (direntd != NULL) {
+                char path2[457];
+                strcpy(path2, str);
+                if (strcmp(path2, "/") != 0)
+                    strcat(path2, "/");
+                strcat(path2, direntd->d_name);
+                // printf("%s 3\n", path2);
+                if (strcmp(direntd->d_name, ".") != 0 &&
+                    direntd->d_name[0] != '.' &&
+                    strcmp(direntd->d_name, "..") != 0 && mode(path2) == 2) {
+                    char b[257];
+                    realpath(path2, b);
+                    // if (strcmp(path2, b) != 0) {
+                    //     direntd = readdir(dir);
+                    //     continue;
+                    // }
+                    strcpy(dui.str[dui.top++], path2);  // 这里只有目录会进栈
+                    // printf("1111111vv%d\n", dui.top);
+                    // printf("%s 4\n", dui.str[dui.top - 1]);
+                    // printf("%d 1 %d \n", h++, dui.top);
+                }
+                direntd = readdir(dir);
+            }
+            closedir(dir);
         }
-    }
+        // else {
+        //     dui.top--;  // 没有目录就是树尾
+        // }
+
+        // printf("%d", dui.top);
+        //  if (dui.top == 0) {
+        //      printf("222222\n");
+        //  }
+    } while (dui.top > 0);
 }
+
 // 递归
 void ls_R(char* a) {
     static int h3 = 0;
@@ -367,6 +386,7 @@ void ls_R(char* a) {
     if (ls(a) == 0) {
         // free(ji);
     } else {
+        ;
         DIR* dir = opendir(a);
         struct dirent* direntd;
         while ((direntd = readdir(dir)) != NULL) {
@@ -382,15 +402,16 @@ void ls_R(char* a) {
                 ls_R(path2);
             } else {
                 // closedir(dir);
-                //  free(path2);
+                //   free(path2);
             }
         }
     }
 }
 
 // void cmp(char * )
-
+// ls: 无法读取符号链接 '/proc/265/task/265/cwd': 权限不够
 int main(int argc, char* argv[]) {
+    struct duilei dui0;
     // if (agrc == 2 && !strcmp(agrv[1], "-a"))
     // {
     //     ls_a(".");
@@ -405,10 +426,10 @@ int main(int argc, char* argv[]) {
     // }
 
     if (argc == 1) {
-        ls(".");
+        ls(".");  //&dui0
         return 0;
     }
-    char mulu[100][256];
+    char mulu[100][257];
     int count = 0;
     int count2 = 0;
     if (argc >= 2) {
@@ -441,18 +462,21 @@ int main(int argc, char* argv[]) {
 
         // 纪录命令行
         if (count2 == 0) {
-            if (zimu['R' - 'A'] == 1)
-                ls_R(".");
-            else
+            if (zimu['R' - 'A'] == 1) {
+                printf("chahhsdasdasfd\n");
+                ls_R1(".");
+            } else
                 ls(".");
         } else {
             for (int i = 0; i < count2; i++) {
-                printf("%s:\n", mulu[i]);
+                // printf("%s:\n", mulu[i]);
                 if (zimu['R' - 'A'] == 1) {
-                    ls_R(mulu[i]);
+                    // printf("zheli~\n");
+                    ls_R1(mulu[i]);  //
                     continue;
-                } else
+                } else {
                     ls(mulu[i]);
+                }
             }
         }
     }

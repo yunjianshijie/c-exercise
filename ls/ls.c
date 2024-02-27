@@ -236,20 +236,21 @@ int ls(char* agrv) {  // struct duilei* zhan
                     direntd->d_name[0] == '.') {
                     direntd = readdir(dir);
                     continue;
-                } else {
+                }  }else {
                     path[count] = (char*)malloc(sizeof(char) * 456);
                     strcpy(path[count], direntd->d_name);
                     count++;
                     direntd = readdir(dir);
-                }
+               
             }
         }
-        // printf("%d", count);
-        if (zimu['a' - 'A'] >= 0) {
+        printf("%d", count);
+        if(zimu['t'-'A']!=1){//如果有t 就是原本的顺序
+        if (zimu['r' - 'A'] ==1) {
             qsort(path, count, sizeof(char*), compare2);
         } else
             qsort(path, count, sizeof(char*), compare1);  // 排序
-
+        }
         for (int i = 0; i < count; i++) {
             struct stat sb;
             char pathname[2456];

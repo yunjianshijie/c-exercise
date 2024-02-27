@@ -74,8 +74,10 @@ void yanse(char* arr, int i) {
         printf("\033[01;34m%s\033[0m", arr);
     if (i == 32)  // 绿色
         printf("\033[01;32m%s\033[0m", arr);
+       
     if (i == 31)  // 红色
-        printf("\031[01;32m%s\031[0m", arr);
+     printf("\033[01;32m%s\033[0m",arr);
+        //printf("\031[01;32m%s\031[0m", arr);
 }
 
 // 判断文件类型

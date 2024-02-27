@@ -218,6 +218,7 @@ int ls(char* agrv) {  // struct duilei* zhan
     DIR* dir;
     struct dirent* direntd;
     dir = opendir(agrv);
+    int zhong=0;
     if (dir == NULL) {
         int fd;
         if ((fd = open(agrv, O_RDONLY)) == -1) {
@@ -230,22 +231,23 @@ int ls(char* agrv) {  // struct duilei* zhan
     } else {
         direntd = readdir(dir);
         while (direntd != NULL) {
-            if (zimu['a' - 'A'] != 1) {
+            if (zimu['a' - 'A'] != 1) {//如果-a 出现.. 没有跳过
                 if ((strcmp(direntd->d_name, ".") == 0 ||
                      strcmp(direntd->d_name, "..") == 0) ||
                     direntd->d_name[0] == '.') {
                     direntd = readdir(dir);
                     continue;
-                }  }else {
+                }  }
+
                     path[count] = (char*)malloc(sizeof(char) * 456);
                     strcpy(path[count], direntd->d_name);
                     count++;
                     direntd = readdir(dir);
                
-            }
+            
         }
-        printf("%d", count);
-        if(zimu['t'-'A']!=1){//如果有t 就是原本的顺序
+       // printf("%d", count);
+        if(zimu['t'-'A'] !=1){//如果有t 就是原本的顺序
         if (zimu['r' - 'A'] ==1) {
             qsort(path, count, sizeof(char*), compare2);
         } else
@@ -262,6 +264,10 @@ int ls(char* agrv) {  // struct duilei* zhan
             if (zimu['i' - 'A'] == 1) {
                 printf("%4d    ", sb.st_ino);
             }  // 输出i节点
+            if(zimu ['s' - 'A']== 1){
+                printf("%d   ",sb.st_blocks/2);
+            }
+            zhong+=sb.st_blocks/2;
 
             if (zimu['l' - 'A'] == 1) {
                 printf("%c", mode2(mode(pathname)));
@@ -273,7 +279,7 @@ int ls(char* agrv) {  // struct duilei* zhan
                 // printf("%10s ", grp->gr_name);
                 // printf("%4ld ",sb.st_uid);
                 // printf("%4ld ",(long)sb.st_gid);
-                printf("%7d ", sb.st_size);
+                printf("%-7ld ", sb.st_size);
 
                 time_t mt = sb.st_mtime;
 
@@ -298,10 +304,14 @@ int ls(char* agrv) {  // struct duilei* zhan
         }
     }
     closedir(dir);
+    if(zimu['s'-'A']==1 || zimu['l'-'A']==1){
+    printf("总共：%d",zhong);}
     printf("\n");
     for (int i = 0; i < count; i++) {
         free(path[i]);
     }
+    
+
     return ret;
 }
 // 循环
@@ -464,7 +474,6 @@ int main(int argc, char* argv[]) {
         // 纪录命令行
         if (count2 == 0) {
             if (zimu['R' - 'A'] == 1) {
-                printf("chahhsdasdasfd\n");
                 ls_R1(".");
             } else
                 ls(".");

@@ -43,7 +43,7 @@ struct film head1;
 // int top3 = 0;
 
 // struct film {
-//     char name[70];        // 名字1
+//     char name[70];        // 名字
 //     char author[70];      // 作者
 //     int number;           // 编号
 //     int month;            // 开始月份

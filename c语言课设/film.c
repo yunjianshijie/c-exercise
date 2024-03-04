@@ -2,8 +2,6 @@
 #include <ctype.h>
 #include <dirent.h>
 #include <fcntl.h>
-#include <grp.h>
-#include <pwd.h>
 #include <stdbool.h>
 #include <stdio.h>
 #include <stdlib.h>
@@ -19,7 +17,7 @@ struct film head1;
 //     char name[70];
 //     char mima[30];
 // } Root[20];
-// // 以root 身份进入可以放入新电影，借书，查询电影，排序,位子
+// // 以root 身份进入可以放入新电影，查询电影，排序,位子
 // // root 20
 // int top1 = 0;
 // struct user {
@@ -315,7 +313,7 @@ void root(int index) {
         } else if (i == '6') { // 删除电影
             delete_film();
         } else if (i == '7') { // 电影排序
-
+            qqsort();
         } else if (i == '0') {
             return; // 退出进入登录界面
         } else if (i == '8') {
@@ -343,7 +341,7 @@ void user(int index) {
             buyfilm(index);
             // 购买电影票
         } else if (i == '4') { // 退票
-
+            freefilm(index);
         } else if (i == '0') {
             return; // 退出进入登录界面
         } else if (i == '5') {
@@ -475,7 +473,7 @@ void rfilmfile(const char *filename) {
         c = c->next;
         // printf("%s,%s\n", a.name, a.author);
     }
-    printf("文件保存成功\n");
+    printf("文件读取成功\n");
     fclose(file); // 关闭文件
 }
 
@@ -491,11 +489,11 @@ void rrootfile(const char *filename) {
            EOF) { // 读取文件中的用户信息
         strcpy(Root[top1].name, a.name);
         strcpy(Root[top1].mima, a.mima);
-        printf("%s %s\n", Root[top1].name, Root[top1].mima);
+        // printf("%s %s\n", Root[top1].name, Root[top1].mima);
         top1++;
     }
 
-    printf("文件保存成功\n");
+    printf("文件读取成功\n");
     fclose(file); // 关闭文件
 }
 
@@ -514,7 +512,7 @@ void ruserfile(const char *filename) {
         User[top2].a = a.a;
         top2++;
     }
-    printf("文件保存成功\n");
+    printf("文件读取成功\n");
     fclose(file); // 关闭文件
 
 } // 读取文件
@@ -615,12 +613,12 @@ void seekuser2() // root查询用户
     printf(
         "|   用户名称   |  用户权限 |  用户密码 |用户编号 | 购买电影编号|\n");
     for (int i = 0; i < top1; i++) {
-        printf("|   %-10s |    root   |   ****    | %d |      /     |\n",
+        printf("|   %-10s |    root   |   ****    | %-6d |      /     |\n",
                Root[i].name, i);
     }
     for (int i = 0; i < top2; i++) {
-        printf("|   %-10s |   user    | %-9s | %d |   %d   |\n", User[i].name,
-               User[i].mima, i, User[i].a);
+        printf("|   %-10s |    user   | %-9s | %-6d |    %-5d   |\n",
+               User[i].name, User[i].mima, i, User[i].a);
     }
 }
 
@@ -679,7 +677,7 @@ void mimachange_user(int index) {
     printf("请输入新密码\n");
     char mima[30];
     scanf("%s", mima);
-    strcpy(Root[index].mima, mima);
+    strcpy(User[index].mima, mima);
     printf("修改密码成功!\n");
 }
 
@@ -776,7 +774,7 @@ void delete_film() {
 } // 删除
 // 买票
 void buyfilm(int us) {
-    printf("输入你要购买电影票的编号");
+    printf("输入你要购买电影票的编号\n");
     int index = -1;
     scanf("%d", &index);
     struct film *a = seekfile3(index);
@@ -795,11 +793,85 @@ void buyfilm(int us) {
     }
     User[us].a = index;
     a->a--;
-    printf("购买成功");
+    printf("购买成功\n");
 }
 
 void freefilm(int us) { // 退票
+    struct film *a = seekfile3(User[us].a);
+    if (a == NULL) {
+        printf("你未购买电影票");
+        return;
+    }
+    printf("你确定要退电影电影票吗？(y/n)\n");
+    char ch[3];
+    scanf("%s", ch);
+    if (ch[0] != 'y') {
+        return;
+    }
+    a->a++;
+    User[us].a = -1;
+    printf("退票成功！");
 }
+//
+void qqsort() {
+    struct film *a = sort(&head1);
+    seekfilm1(a, '5');
+}
+struct film *sort(struct film *head) { // 用归并
+    // printf("zhelli");
+    if (head == NULL || head->next == NULL) {
+        return head;
+    }
+    struct film *min = getmin(head);
+    struct film *min1 = min->next;
+    min->next = NULL;
+    struct film *left = sort(head);
+    struct film *right = sort(min1);
+    struct film *ret = merge(left, right);
+    return ret;
+}
+struct film *getmin(struct film *head) { // 找中间节点
+    if (head == NULL || head->next == NULL) {
+        return head;
+    }
+    struct film *slow = head;
+    struct film *fast = head;
+    while (fast->next != NULL && fast->next->next != NULL) {
+        slow = slow->next;
+        fast = fast->next->next;
+    }
+    return slow;
+}
+
+struct film *merge(struct film *left, struct film *right) { // 合并两个有序链表
+    if (left == NULL) {
+        return right;
+    }
+    if (right == NULL) {
+        return left;
+    }
+    struct film ab;
+    struct film *a = &ab;
+    while (left != NULL && right != NULL) {
+        if (left->number <= right->number) {
+            a->next = left;
+            left = left->next;
+        } else {
+            a->next = right;
+            right = right->next;
+        }
+        a = a->next;
+    }
+    if (left != NULL) {
+        a->next = left;
+    }
+    if (right != NULL) {
+        a->next = right;
+    }
+    struct film *ret = ab.next;
+    return ret;
+}
+
 //
 //
 //
@@ -846,20 +918,11 @@ void wfilmfile2() {
     fclose(file);
     printf("保存数据成功。\n");
 }
-
 int main() {
     // printf("ekjrfkew\n");
     rfilmfile("myfilm");
     rrootfile("root");
     ruserfile("user");
-    // addfilm(&head1);
-    // seekfilm1(&head1);
-    // struct film *a = head1.next;
-    // while (a != NULL) {
-    //     printf("1%s\n", a->name);
-    //     a = a->next;
-    // }
-    // printf("ksdfhjsk");
     login();
     wrootfile2();
     wuserfile2(); // 最后保存修改删除数据

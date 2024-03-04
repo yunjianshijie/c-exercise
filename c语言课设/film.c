@@ -347,7 +347,7 @@ void user(int index) {
         } else if (i == '0') {
             return; // 退出进入登录界面
         } else if (i == '5') {
-
+            mimachange_user(index); // 改密码
         } else {
             printf("输入不正确");
         }

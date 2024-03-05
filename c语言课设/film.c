@@ -8,7 +8,8 @@
 #include <string.h>
 #include <sys/stat.h>
 #include <sys/types.h>
-#include <time.h>
+#include <termios.h>
+#include <unistd.h>
 struct film head1;
 // struct weizi head2;
 // struct user head3;
@@ -94,9 +95,10 @@ void rootfun() {
     printf("  6.删除电影信息\n");
     printf("  7.电影排序\n");
     printf("  8.修改密码");
+    printf("  9.统计电影\n");
     printf("  0.退出\n");
     printf("----------------------------------------\n");
-    printf("  请选择(0-7) \n");
+    printf("  请选择(0-9) \n");
 }
 
 void userfun() {
@@ -140,6 +142,21 @@ void modfiy_filmfun() {
     printf("  1.电影名称\n");
     printf("  2.电影时间\n");
     printf("  3.电影作者\n");
+    printf("  4.电影剩余座位\n");
+    printf("  0.退出\n");
+    printf("----------------------------------------\n");
+    printf("  请选择(0-4)\n");
+}
+
+void sortfun() {
+    printf("\n");
+    printf("---------------------------------------\n");
+    printf("|                 排序                | \n");
+    printf("---------------------------------------\n");
+    printf("   排序:\n");
+    printf("  1.电影编号正序\n");
+    printf("  2.电影编号反序\n");
+    printf("  3.电影名称\n");
     printf("  4.电影剩余座位\n");
     printf("  0.退出\n");
     printf("----------------------------------------\n");
@@ -297,27 +314,29 @@ void root(int index) {
     while (1) {
         rootfun();
         getchar();
-        char i = 0;
-        scanf("%c", &i);
-        if (i == '1') {        // 查询电影讯息
-            filmseek();        // 先打印吧
-        } else if (i == '2') { // 查询用户信息
+        char ch[3];
+        scanf("%s", ch);
+        if (ch[0] == '1') {        // 查询电影讯息
+            filmseek();            // 先打印吧
+        } else if (ch[0] == '2') { // 查询用户信息
             seekuser2();
-        } else if (i == '3') { // 添加电影信息
+        } else if (ch[0] == '3') { // 添加电影信息
             addfilm(&head1);
             // 添加后回到root 界面
-        } else if (i == '4') { // 添加房间
+        } else if (ch[0] == '4') { // 添加房间
             addweizi();
-        } else if (i == '5') { // 修改电影
+        } else if (ch[0] == '5') { // 修改电影
             modfiy_film();
-        } else if (i == '6') { // 删除电影
+        } else if (ch[0] == '6') { // 删除电影
             delete_film();
-        } else if (i == '7') { // 电影排序
-            qqsort();
-        } else if (i == '0') {
+        } else if (ch[0] == '7') { // 电影排序
+            sort1();
+        } else if (ch[0] == '0') {
             return; // 退出进入登录界面
-        } else if (i == '8') {
+        } else if (ch[0] == '8') {
             mimachange_root();
+        } else if (ch[0] == '9') {
+            tongji(&head1);
         } else {
             printf("输入格式不正确\n");
             continue;
@@ -328,23 +347,22 @@ void root(int index) {
 void user(int index) {
     while (1) {
         userfun();
-        getchar();
-        char i = 0;
-        scanf("%c", &i);
-        if (i == '1') {
+        char ch[3];
+        scanf("%s", ch);
+        if (ch[0] == '1') {
             seekuser3(index);
             // 打印自己用户的信息
-        } else if (i == '2') {
+        } else if (ch[0] == '2') {
             filmseek();
             // 查询电影信息
-        } else if (i == '3') {
+        } else if (ch[0] == '3') {
             buyfilm(index);
             // 购买电影票
-        } else if (i == '4') { // 退票
+        } else if (ch[0] == '4') { // 退票
             freefilm(index);
-        } else if (i == '0') {
+        } else if (ch[0] == '0') {
             return; // 退出进入登录界面
-        } else if (i == '5') {
+        } else if (ch[0] == '5') {
             mimachange_user(index); // 改密码
         } else {
             printf("输入不正确");
@@ -353,12 +371,12 @@ void user(int index) {
 }
 void filmseek() {
     filmseekfun();
-    char i = 0;
-    getchar();
-    scanf("%c", &i);
-    if (i == '1' || i == '2' || i == '3' || i == '4' || i == '5') {
-        seekfilm1(&head1, i);
-    } else if (i == '0') {
+    char ch[3];
+    scanf("%s", ch);
+    if (ch[0] == '1' || ch[0] == '2' || ch[0] == '3' || ch[0] == '4' ||
+        ch[0] == '5') {
+        seekfilm1(&head1, ch[0]);
+    } else if (ch[0] == '0') {
 
     } else {
         printf("你输入的不正确");
@@ -567,6 +585,7 @@ void seekfilm1(struct film *head, char h) {
         }
         a = a->next;
     }
+    sleep(3);
 }; // 打印电影场次
 
 bool seekfilm21(struct film *head, char *cot) {
@@ -620,6 +639,7 @@ void seekuser2() // root查询用户
         printf("|   %-10s |    user   | %-9s | %-6d |    %-5d   |\n",
                User[i].name, User[i].mima, i, User[i].a);
     }
+    sleep(3);
 }
 
 void seekuser3(int index) { // 查询自己的信息
@@ -813,11 +833,25 @@ void freefilm(int us) { // 退票
     printf("退票成功！");
 }
 //
-void qqsort() {
-    struct film *a = sort(&head1);
-    seekfilm1(a, '5');
+void waitForKeypress() {
+    struct termios oldTerm, newTerm;
+    tcgetattr(STDIN_FILENO, &oldTerm);
+    newTerm = oldTerm;
+    newTerm.c_lflag &= ~(ICANON | ECHO);
+    tcsetattr(STDIN_FILENO, TCSANOW, &newTerm);
+    getchar();
+    tcsetattr(STDIN_FILENO, TCSANOW, &oldTerm);
 }
-struct film *sort(struct film *head) { // 用归并
+
+void qqsort1(char index) {
+    struct film *head = head1.next;
+    head1.next = sort(head, index);
+    seekfilm1(&head1, '5');
+    waitForKeypress();
+    printf("点击任意键继续\n");
+    sleep(3);
+}
+struct film *sort(struct film *head, char index) { // 用归并
     // printf("zhelli");
     if (head == NULL || head->next == NULL) {
         return head;
@@ -825,9 +859,10 @@ struct film *sort(struct film *head) { // 用归并
     struct film *min = getmin(head);
     struct film *min1 = min->next;
     min->next = NULL;
-    struct film *left = sort(head);
-    struct film *right = sort(min1);
-    struct film *ret = merge(left, right);
+    struct film *left = sort(head, index);
+    struct film *right = sort(min1, index);
+    struct film *ret = merge(left, right, index);
+    struct film;
     return ret;
 }
 struct film *getmin(struct film *head) { // 找中间节点
@@ -843,7 +878,8 @@ struct film *getmin(struct film *head) { // 找中间节点
     return slow;
 }
 
-struct film *merge(struct film *left, struct film *right) { // 合并两个有序链表
+struct film *merge(struct film *left, struct film *right,
+                   char index) { // 合并两个有序链表
     if (left == NULL) {
         return right;
     }
@@ -853,7 +889,11 @@ struct film *merge(struct film *left, struct film *right) { // 合并两个有�
     struct film ab;
     struct film *a = &ab;
     while (left != NULL && right != NULL) {
-        if (left->number <= right->number) {
+
+        if ((index == '1' && left->number <= right->number) ||
+            (index == '2' && left->number >= right->number) ||
+            (index == '3' && strcmp(left->author, right->author) > 0) ||
+            (index == '4' && left->a >= right->a)) {
             a->next = left;
             left = left->next;
         } else {
@@ -872,6 +912,41 @@ struct film *merge(struct film *left, struct film *right) { // 合并两个有�
     return ret;
 }
 
+void sort1() {
+    sortfun();
+    int ch[3];
+    scanf("%s", ch);
+    if (ch[0] == '0') {
+        return;
+    } else if (ch[0] == '1' || ch[0] == '2' || ch[0] == '3' || ch[0] == '4') {
+        qqsort1(ch[0]);
+    } else {
+        printf("输入不正确");
+    }
+    return;
+}
+
+void tongji(struct film *head) {
+    struct film *b = head->next;
+    if (b == NULL) {
+        printf("无电影\n");
+        return;
+    }
+    char amax[70];
+    strcpy(amax, b->name);
+    int amax1 = b->a;
+    b = b->next;
+    while (b == NULL) {
+        if (amax1 < b->a) {
+            strcpy(amax, b->name);
+            amax1 = b->a;
+        }
+        b = b->next;
+    }
+    printf("剩余座位最多的电影：%s 有%d个\n", amax, amax1);
+    // printf("购买人数最多的电影：\n");
+    sleep(3);
+}
 //
 //
 //

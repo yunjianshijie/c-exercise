@@ -47,6 +47,7 @@ void rootfun();        //
 void userfun();        //
 void filmseekfun();    // 电影查询
 void modfiy_filmfun(); // 电影修改
+void sortfun();
 // 图形界面
 void login(void); // loninfun功能 登录
 int login1();     // root
@@ -94,11 +95,16 @@ void freefilm(int us); // 退票
                        //
                        //
 
-void qqsort();
-struct film *sort(struct film *head); // 归并排序
+void sort1();
+
+void qqsort1(char index);
+struct film *sort(struct film *head, char index); // 归并排序
 struct film *getmin(struct film *head);
-struct film *merge(struct film *left, struct film *right); // 合并两个链表
+struct film *merge(struct film *left, struct film *right,
+                   char index); // 合并两个链表
 // 排序
+void tongji(struct film *head);
+
 void wrootfile2();
 void wuserfile2();
 void wfilmfile2(); // 最后保存修改删除数据

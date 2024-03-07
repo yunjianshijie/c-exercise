@@ -1,13 +1,9 @@
 #include "ks.h"
-#include <ctype.h>
-#include <dirent.h>
-#include <fcntl.h>
+#include <signal.h>
 #include <stdbool.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
-#include <sys/stat.h>
-#include <sys/types.h>
 #include <termios.h>
 #include <unistd.h>
 struct film head1;
@@ -55,7 +51,7 @@ struct film head1;
 // };
 
 void loginfun() {
-
+    printf("\033[H\033[J");
     printf("---------------------------------------\n");
     printf("               管理系统                \n");
     printf("---------------------------------------\n");
@@ -69,6 +65,7 @@ void loginfun() {
 }
 //
 void signfun() {
+    printf("\033[H\033[J");
     printf("\n");
     printf("---------------------------------------\n");
     printf("               注册界面                \n");
@@ -82,6 +79,7 @@ void signfun() {
 };
 
 void rootfun() {
+    printf("\033[H\033[J");
     printf("\n");
     printf("---------------------------------------\n");
     printf("               管理员界面                \n");
@@ -102,6 +100,7 @@ void rootfun() {
 }
 
 void userfun() {
+    printf("\033[H\033[J");
     printf("\n");
     printf("---------------------------------------\n");
     printf("               用户界面                \n");
@@ -118,6 +117,7 @@ void userfun() {
 }
 
 void filmseekfun() {
+    printf("\033[H\033[J");
     printf("\n");
     printf("---------------------------------------\n");
     printf("               查询票务界面                \n");
@@ -134,6 +134,7 @@ void filmseekfun() {
 }
 
 void modfiy_filmfun() {
+    printf("\033[H\033[J");
     printf("\n");
     printf("---------------------------------------\n");
     printf("               修改信息                \n");
@@ -149,6 +150,7 @@ void modfiy_filmfun() {
 }
 
 void sortfun() {
+    printf("\033[H\033[J");
     printf("\n");
     printf("---------------------------------------\n");
     printf("|                 排序                | \n");
@@ -165,13 +167,13 @@ void sortfun() {
 
 void login(void) {
     while (1) {
-        fflush(stdin);
+        // fflush(stdin);
         loginfun();
         int c;
         // while ((c = getchar()) == '\n') {
         //     //清空输入缓冲区
         // }
-        char i[3];
+        char i[40];
         scanf("%s", i);
         if (strcmp(i, "1") == 0) {
             int index = login1();
@@ -275,6 +277,7 @@ void sign1(void) {
     for (int i = 0; i < top1; i++) {
         if (strcmp(Root[i].name, a) == 0) {
             printf("用户名已存在\n");
+            stop();
             return;
         }
     }
@@ -285,10 +288,12 @@ void sign1(void) {
     printf("账号注册成功！\n");
     wrootfile(&Root[top1], "root");
     top1++;
+    stop();
 }
 void sign2(void) {
     if (top2 >= 40) {
         printf("账号数目已满\n");
+        stop();
         return;
     }
     printf("请输入账号名称：");
@@ -307,13 +312,14 @@ void sign2(void) {
     printf("账号注册成功！\n");
     User[top2].a = -1;
     wuserfile(&User[top2], "user");
+    stop();
     top2++;
 }
 
 void root(int index) {
     while (1) {
         rootfun();
-        getchar();
+        // getchar();
         char ch[3];
         scanf("%s", ch);
         if (ch[0] == '1') {        // 查询电影讯息
@@ -394,23 +400,16 @@ void addfilm(struct film *n1) { // 添加电影
     printf("请输入电影作者:\n");
     scanf("%s", n2->author);
     getchar();
-    printf("请输入电影编号：\n"); // 应该检测是否为数字
-    scanf("%d", &(n2->number));
-    struct film *a = seekfile3(n2->number);
-    if (a != NULL) {
-        free(n2);
-        printf("已存在此编号！");
-        return;
+    while (1) {
+        printf("请输入电影编号：\n"); // 应该检测是否为数字
+        scanf("%d", &(n2->number));
+        struct film *a = seekfile3(n2->number, 1);
+        if (a != NULL) {
+            printf("已存在此编号！\n");
+        } else {
+            break;
+        }
     }
-    // struct film *a = &head1;
-    // while (a->next != NULL) {
-    //     if (a->number == n2->number) {
-    //         printf("已存在此编号！");
-    //         free(n2);
-    //         return;
-    //     }
-    //     a = a->next;
-    // }
     printf("请输入电影开始月份：\n");
     scanf("%d", &(n2->month));
     printf("请输入电影开始日期：\n");
@@ -424,6 +423,8 @@ void addfilm(struct film *n1) { // 添加电影
     n2->next = NULL;
     n1->next = n2;
     wfilmfile(n2, "myfilm");
+    printf("添加成功！\n");
+    stop();
 }
 
 void addweizi() { // 添加房间
@@ -491,7 +492,7 @@ void rfilmfile(const char *filename) {
         c = c->next;
         // printf("%s,%s\n", a.name, a.author);
     }
-    printf("文件读取成功\n");
+    // printf("文件读取成功\n");
     fclose(file); // 关闭文件
 }
 
@@ -511,7 +512,7 @@ void rrootfile(const char *filename) {
         top1++;
     }
 
-    printf("文件读取成功\n");
+    // printf("文件读取成功\n");
     fclose(file); // 关闭文件
 }
 
@@ -530,7 +531,7 @@ void ruserfile(const char *filename) {
         User[top2].a = a.a;
         top2++;
     }
-    printf("文件读取成功\n");
+    // printf("文件读取成功\n");
     fclose(file); // 关闭文件
 
 } // 读取文件
@@ -546,6 +547,7 @@ void seekuser1() { // 打印用户
     for (int i = 0; i < top2; i++) {
         printf("%s |%d|", User[top2].name, User[top2].xuehao);
     }
+    stop();
 } // 没写买票情况
 
 void seekfilm1(struct film *head, char h) {
@@ -585,7 +587,7 @@ void seekfilm1(struct film *head, char h) {
         }
         a = a->next;
     }
-    sleep(3);
+    stop();
 }; // 打印电影场次
 
 bool seekfilm21(struct film *head, char *cot) {
@@ -639,7 +641,7 @@ void seekuser2() // root查询用户
         printf("|   %-10s |    user   | %-9s | %-6d |    %-5d   |\n",
                User[i].name, User[i].mima, i, User[i].a);
     }
-    sleep(3);
+    stop();
 }
 
 void seekuser3(int index) { // 查询自己的信息
@@ -647,27 +649,31 @@ void seekuser3(int index) { // 查询自己的信息
     printf("密码：%s\n", User[index].mima);
     printf("编号：%d\n", index);
     printf("购买电影编号：%d\n", User[index].a);
-    struct film *a = seekfile3(User[index].a);
+    struct film *a = seekfile3(User[index].a, 1);
     if (a == NULL) {
         printf("购买电影名称:%s\n", a->name);
     }
+    stop();
 }
 
-struct film *seekfile3(int index) {
+struct film *seekfile3(int index, int h) {
     struct film *a = &head1;
     int i = -1;
     while (a->next != NULL) {
         a = a->next;
         if (seekfilm22(a, index)) {
-            printf("名称：%s\n", a->name);
-            printf("作者：%s\n", a->author);
-            printf("编号：%d\n", a->number);
-            printf("时间: %d月%d日 %02d:%02d\n", a->month, a->day, a->shi,
-                   a->fen);
+            if (h == 0) {
+                printf("名称：%s\n", a->name);
+                printf("作者：%s\n", a->author);
+                printf("编号：%d\n", a->number);
+                printf("时间: %d月%d日 %02d:%02d\n", a->month, a->day, a->shi,
+                       a->fen);
+            }
             return a;
         }
     }
-    printf("未找到此电影\n");
+    if (h == 0)
+        printf("未找到此电影\n");
     return NULL;
 }
 void seekweizi2(); // 查询位置
@@ -692,6 +698,7 @@ void mimachange_root() {
         strcpy(Root[index].mima, mima);
         printf("修改密码成功!\n");
     }
+    stop();
 }
 void mimachange_user(int index) {
     printf("请输入新密码\n");
@@ -699,13 +706,14 @@ void mimachange_user(int index) {
     scanf("%s", mima);
     strcpy(User[index].mima, mima);
     printf("修改密码成功!\n");
+    stop();
 }
 
 void modfiy_film() {
     printf("请输入你想修改电影编号\n");
     int bianhao;
     scanf("%d", &bianhao);
-    struct film *a = seekfile3(bianhao);
+    struct film *a = seekfile3(bianhao, 0);
     //  while (a->next!=NULL){
     //      a = a->next;
     //      if(bianhao==a->number){
@@ -732,6 +740,7 @@ void modfiy_film() {
         scanf("%s", name);
         strcpy(a->name, name);
         printf("修改成功!\n");
+        stop();
         return;
     } else if (index == 2) {
         int shi = 0, fen = 0, month = 0, day = 0;
@@ -748,6 +757,7 @@ void modfiy_film() {
         a->shi = shi;
         a->fen = fen;
         printf("修改成功！\n");
+        stop();
         return;
     } else if (index == 3) {
         printf("输入作者名称：\n");
@@ -755,6 +765,7 @@ void modfiy_film() {
         scanf("%s", zuozhe);
         strcpy(a->author, zuozhe);
         printf("修改成功！\n");
+        stop();
         return;
     } else if (index == 4) {
         printf("请输入剩余座位：\n");
@@ -762,9 +773,11 @@ void modfiy_film() {
         scanf("%d", &b);
         a->a = b;
         printf("修改成功!\n");
+        stop();
         return;
     } else {
         printf("无效数字!\n");
+        stop();
         return;
     }
 }
@@ -774,7 +787,7 @@ void delete_film() {
     int index = -1;
     printf("输入你要删除的电影序号:\n");
     scanf("%d", &index);
-    struct film *a = seekfile3(index);
+    struct film *a = seekfile3(index, 0);
     if (a == NULL) {
         return;
     }
@@ -790,14 +803,15 @@ void delete_film() {
     }
     b->next = a->next;
     free(a);
-    printf("删除成功！");
+    printf("删除成功！\n");
+    stop();
 } // 删除
 // 买票
 void buyfilm(int us) {
     printf("输入你要购买电影票的编号\n");
     int index = -1;
     scanf("%d", &index);
-    struct film *a = seekfile3(index);
+    struct film *a = seekfile3(index, 0);
     if (a == NULL) {
         return;
     }
@@ -814,10 +828,11 @@ void buyfilm(int us) {
     User[us].a = index;
     a->a--;
     printf("购买成功\n");
+    stop();
 }
 
 void freefilm(int us) { // 退票
-    struct film *a = seekfile3(User[us].a);
+    struct film *a = seekfile3(User[us].a, 0);
     if (a == NULL) {
         printf("你未购买电影票");
         return;
@@ -831,25 +846,15 @@ void freefilm(int us) { // 退票
     a->a++;
     User[us].a = -1;
     printf("退票成功！");
-}
-//
-void waitForKeypress() {
-    struct termios oldTerm, newTerm;
-    tcgetattr(STDIN_FILENO, &oldTerm);
-    newTerm = oldTerm;
-    newTerm.c_lflag &= ~(ICANON | ECHO);
-    tcsetattr(STDIN_FILENO, TCSANOW, &newTerm);
-    getchar();
-    tcsetattr(STDIN_FILENO, TCSANOW, &oldTerm);
+    stop();
 }
 
 void qqsort1(char index) {
     struct film *head = head1.next;
     head1.next = sort(head, index);
     seekfilm1(&head1, '5');
-    waitForKeypress();
-    printf("点击任意键继续\n");
-    sleep(3);
+    // stop();
+    //  ungetc(ch, stdin);
 }
 struct film *sort(struct film *head, char index) { // 用归并
     // printf("zhelli");
@@ -945,7 +950,7 @@ void tongji(struct film *head) {
     }
     printf("剩余座位最多的电影：%s 有%d个\n", amax, amax1);
     // printf("购买人数最多的电影：\n");
-    sleep(3);
+    stop();
 }
 //
 //
@@ -961,7 +966,7 @@ void wrootfile2() {
         fprintf(file, "%s,%s\n", Root[i].name, Root[i].mima);
     }
     fclose(file);
-    printf("保存数据成功。\n");
+    // printf("保存数据成功。\n");
 }
 
 void wuserfile2() {
@@ -974,7 +979,7 @@ void wuserfile2() {
         fprintf(file, "%s,%s,%d\n", User[i].name, User[i].mima, User[i].a);
     }
     fclose(file);
-    printf("保存数据成功。\n");
+    // printf("保存数据成功。\n");
 }
 
 void wfilmfile2() {
@@ -991,16 +996,36 @@ void wfilmfile2() {
                 a->number, a->month, a->day, a->shi, a->fen, a->a);
     }
     fclose(file);
-    printf("保存数据成功。\n");
+    // printf("保存数据成功。\n");
+}
+
+void stop() {
+    printf("输入回车继续\n");
+    char ch;
+    getchar();
+    while ((ch = getchar()) != '\n')
+        ;
+}
+void signal_handler(int signum) {
+    printf("退出并保存\n");
+    wrootfile2();
+    wuserfile2(); // 最后保存修改删除数据
+    wfilmfile2();
+    exit(1);
+    // 不做任何处理
 }
 int main() {
     // printf("ekjrfkew\n");
     rfilmfile("myfilm");
     rrootfile("root");
     ruserfile("user");
+    if (signal(SIGINT, signal_handler) == SIG_ERR) {
+        perror("signal");
+    }
     login();
     wrootfile2();
     wuserfile2(); // 最后保存修改删除数据
     wfilmfile2();
+
     return 0;
 }

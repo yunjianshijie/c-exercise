@@ -83,8 +83,8 @@ bool seekfilm23(struct film *head, int m, int d); // 查询电影时间
 
 void seekweizi(); // 查询位置
 
-void modfiy_film();                // modfiy_filmfun修改电影功能
-struct film *seekfile3(int index); // 查询电影返回
+void modfiy_film();                       // modfiy_filmfun修改电影功能
+struct film *seekfile3(int index, int h); // 查询电影返回
 
 void mimachange_root();
 void mimachange_user(int index);
@@ -108,3 +108,6 @@ void tongji(struct film *head);
 void wrootfile2();
 void wuserfile2();
 void wfilmfile2(); // 最后保存修改删除数据
+
+void stop();
+void signal_handler(int signum); // 截断ctrl+c

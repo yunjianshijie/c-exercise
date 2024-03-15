@@ -1,5 +1,5 @@
 #include "shell.h"
-
+int munu[10]; //
 int main() {
 
     struct termios term; // 结构体储存终端中各种属性
@@ -29,23 +29,16 @@ int main() {
         if (index == 1 && strcmp(a[0], "exit") == 0) {
             exit(2);
         }
-        int h = 0;
-        for (int i = 0; i < index; i++) {
-            if (strcmp(a[i], ">") == 0) {
-                h = 1;
-            } else if (strcmp(a[i], "<") == 0) {
-                h = 2;
-            } else if (strcmp(a[i], ">>") == 0) {
-                h = 3;
-            } else if (strcmp(a[i], "<<") == 0) {
-                h = 4;
-            } else if (strcmp(a[i], "|") == 0) {
-                h = 5;
-            }
-        } // 找字符
-
-        if (0) {
+        // 处理
+        int h = find(index, a); // 找字符
+        if (h == -1) {
+            printf("输入格式问题\n");
+            continue;
+        }
+        if (h != 0) {
             printf("此时逆袭\n"); // h有
+            if (h ==)
+
         } else {
             pid_t child_pid;
             child_pid = fork();
@@ -53,7 +46,6 @@ int main() {
                 perror("fork");
             } else if (child_pid == 0) {
                 // FILE *file;
-                // file = fopen(".", "a");
                 execvp(a[0], a);
                 exit(1);
                 // printf("sdkf");
@@ -182,4 +174,107 @@ void cdfun(int index, char **a, char *history) {
 void sigint_handler() {
     // 屏蔽ctrl+c
     // printf("再玩一会吧～\n");
+}
+void mypipe() {
+    int pipefd[2];
+    pid_t pid;
+
+    if (pipe(pipefd) == -1) {
+        perror("pipe");
+        exit(EXIT_FAILURE);
+    }
+
+    pid = fork();
+
+    if (pid == -1) {
+        perror("fork");
+        exit(EXIT_FAILURE);
+    }
+}
+
+bool judge(int h, char **a, int index, int i)
+// 判断重定向，管道，&后台进行，是否输入正确
+{
+    if (h == 0) {
+        return true;
+    }
+    if (h == 1 || h == 3 || h == 6) {
+        if (i == index - 1) {
+            return false;
+        } else {
+            return true;
+        }
+    }
+    if (h == 2 || h == 4) {
+        if (i == 0) {
+            return false;
+        } else {
+            return true;
+        }
+    }
+    if (h == 5) {
+        if (i == 0 || i == index - 1) {
+            return false;
+        } else {
+            return true;
+        }
+    }
+}
+
+// bool judge(int h, char **a, int index, int i)
+int find(int index, char **a) {
+
+    for (int i = 0; i < index; i++) {
+        if (strcmp(a[i], ">") == 0) {
+            if (judge(1, a, index, i))
+                return 1;
+            return -1;
+        } else if (strcmp(a[i], "<") == 0) {
+            if (judge(2, a, index, i))
+                return 2;
+            return -1;
+        } else if (strcmp(a[i], ">>") == 0) {
+            if (judge(3, a, index, i))
+                return 3;
+            return -1;
+        } else if (strcmp(a[i], "<<") == 0) {
+            if (judge(4, a, index, i))
+                return 4;
+            return -1;
+        } else if (strcmp(a[i], "|") == 0) {
+            if (judge(5, a, index, i))
+                return 5;
+            return -1;
+        } else if (strcmp(a[i], "&") == 0) {
+            if (judge(6, a, index, i))
+                return 6;
+            return -1;
+        }
+    } // 找字符
+    return 0;
+}
+void output1(char *file_name, char **command) {
+    FILE *file = fopen(file_name, "w");
+
+    if (file == NULL) {
+        perror("Failed to open file");
+        return;
+    }
+    // 将标准输出重定向到文件
+    int fd = fileno(file);
+    dup2(fd, STDOUT_FILENO);
+    int pid_child = fork();
+    if (pid_child == -1) {
+        perror("fork");
+    } else if (pid_child == 0) {
+        execvp("ls", command);
+        exit(1);
+    } else {
+        int wait_rv;
+        int stats;
+        wait(&stats);
+    }
+    fclose(file);
+    fork(); // 这个是
+    return;
 }

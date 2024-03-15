@@ -6,6 +6,7 @@
 #include <readline/history.h>
 #include <readline/readline.h>
 #include <signal.h>
+#include <stdbool.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -24,3 +25,8 @@ char **scanfs(int *index, char *a); // 分割字符 index有多少给字符，�
 void cdfun(int index, char **a, char *history); // cd功能
 void parent_code(int chilepid);
 void sigint_handler(); // 屏蔽ctrl+c
+void mypipe();
+bool judge(int h, char **a, int index, int i);
+// 判断重定向，管道，&后台进行，是否输入正确
+int find(int index, char **a);
+void output1(char *fd, char **command);

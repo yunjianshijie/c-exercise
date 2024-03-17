@@ -86,7 +86,7 @@ void rootfun() {
     printf("---------------------------------------\n");
     printf("  使用何种功能:\n");
     printf("  1.查询电影信息\n");
-    printf("  2.查询用户信息\n");
+    printf("  2.户查询用信息\n");
     printf("  3.添加电影\n");
     printf("  4.添加电影房间：\n");
     printf("  5.修改电影信息\n");
@@ -179,6 +179,7 @@ void login(void) {
             int index = login1();
             if (index != -1) {
                 printf("登录成功！\n");
+                stop();
                 root(index);
             }
             // 账号确认
@@ -186,6 +187,7 @@ void login(void) {
             int index = login2();
             if (index != -1) {
                 printf("登录成功！\n");
+                stop();
                 user(index);
             }
         } else if (i[0] == '3') {
@@ -194,6 +196,7 @@ void login(void) {
             return; // 直接退出程序
         } else {
             printf("您输入的数字不正确。\n");
+            stop();
         }
     }
 }
@@ -220,6 +223,7 @@ int login1(void) {
             return index;
         else {
             printf("密码错误！\n");
+            stop();
             return -1;
         }
     }
@@ -238,6 +242,7 @@ int login2(void) {
     }
     if (index == -1) {
         printf("未发现此账号\n");
+        stop();
         return -1;
     } else {
         printf("请输入账号密码：\n");
@@ -247,6 +252,7 @@ int login2(void) {
             return index;
         else {
             printf("密码错误！\n");
+            stop();
             return -1;
         }
     }
@@ -264,11 +270,13 @@ void sign() {
         return;
     } else {
         printf("您输入的数字不正确。\n");
+        stop();
     }
 }
 void sign1(void) {
     if (top1 == 20) {
         printf("账号数目已满20");
+        stop();
         return;
     }
     printf("请输入账号名称：\n");
@@ -286,6 +294,7 @@ void sign1(void) {
     scanf("%s", Root[top1].mima);
     printf("\n");
     printf("账号注册成功！\n");
+    stop();
     wrootfile(&Root[top1], "root");
     top1++;
     stop();
@@ -302,6 +311,7 @@ void sign2(void) {
     for (int i = 0; i < top2; i++) {
         if (strcmp(User[i].name, a) == 0) {
             printf("用户名已存在\n");
+            stop();
             return;
         }
     }
@@ -310,6 +320,7 @@ void sign2(void) {
     scanf("%s", User[top2].mima);
     printf("\n");
     printf("账号注册成功！\n");
+    stop();
     User[top2].a = -1;
     wuserfile(&User[top2], "user");
     stop();
@@ -345,6 +356,7 @@ void root(int index) {
             tongji(&head1);
         } else {
             printf("输入格式不正确\n");
+            stop();
             continue;
         }
     }
@@ -372,6 +384,7 @@ void user(int index) {
             mimachange_user(index); // 改密码
         } else {
             printf("输入不正确");
+            stop();
         }
     }
 }
@@ -386,6 +399,7 @@ void filmseek() {
 
     } else {
         printf("你输入的不正确");
+        stop();
     }
 }
 void addfilm(struct film *n1) { // 添加电影
@@ -928,6 +942,8 @@ void sort1() {
     } else {
         printf("输入不正确");
     }
+
+    stop();
     return;
 }
 

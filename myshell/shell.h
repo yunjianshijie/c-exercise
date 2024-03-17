@@ -22,11 +22,15 @@
 void home(char *a, char *home); // 判断是否在home/user里面,并改成~
 char *printfs();                // 输入前面一串 返回输入字符串
 char **scanfs(int *index, char *a); // 分割字符 index有多少给字符，返回输入
-void cdfun(int index, char **a, char *history); // cd功能
+void cdfun(int index, char **a, char *cdhistory); // cd功能
 void parent_code(int chilepid);
 void sigint_handler(); // 屏蔽ctrl+c
 void mypipe();
 bool judge(int h, char **a, int index, int i);
 // 判断重定向，管道，&后台进行，是否输入正确
-int find(int index, char **a);
-void output1(char *fd, char **command);
+int find(int index, char **a, int *number, int *n);
+
+void output1(char *file_name, char **command);
+void output2(char *file_name, char **command);
+char **find_command(char **a, int left, int right); // 将左右两边分割成
+void printf2(char **a, int index);

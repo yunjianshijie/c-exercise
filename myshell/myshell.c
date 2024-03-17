@@ -8,10 +8,11 @@ int main() {
     tcsetattr(0, TCSANOW, &term);
     // 屏蔽ctrl+D
     signal(SIGINT, sigint_handler);
-    char cdhistory[30] = "/"; // cd -上一个cd的目录
-    char history[30][30];
-    int top_history = 0; // 将history历史变成栈
+    char cdhistory[300]; // cd -上一个cd的目录
+    getcwd(cdhistory, sizeof(cdhistory));
     while (1) {
+        int number_ch[10] = {0}; // 一从前到后编号，100*位
+        int number = 0;
         char *b = printfs();
         int index = 0;
         char **a = scanfs(&index, b);
@@ -30,14 +31,56 @@ int main() {
             exit(2);
         }
         // 处理
-        int h = find(index, a); // 找字符
+        // number_ch数量
+        int h = find(index, a, number_ch, &number); // 找字符
+        char ***ab = (char ***)malloc(sizeof(char **) * number);
+        int ab_len[50];
         if (h == -1) {
             printf("输入格式问题\n");
             continue;
         }
         if (h != 0) {
-            printf("此时逆袭\n"); // h有
-            if (h ==)
+            printf("!!!!!\n"); // h有
+
+            for (int i = 0; i < number + 1; i++) {
+                // printf("zjipj\n");
+                if (i == 0) {
+                    ab[i] = find_command(a, 0, (number_ch[i] / 10) - 1);
+                    ab_len[i] = number_ch[i] / 10;
+                    // printf("ab%d : %d->%d  %d \n", i, 0, number_ch[i] / 10 -
+                    // 1,
+                    //        ab_len[i]);
+                } else if (i == number) {
+                    ab[i] =
+                        find_command(a, (number_ch[i - 1] / 10) + 1, index - 1);
+                    ab_len[i] = index - 1 - number_ch[i - 1] / 10;
+                    // printf("ab%d : %d->%d  %d\n ", i, number_ch[i - 1] / 10 +
+                    // 1,
+                    //        index - 1, ab_len[i]);
+                } else {
+                    ab[i] = find_command(a, number_ch[i - 1] / 10 + 1,
+                                         number_ch[i] / 10 - 1);
+                    ab_len[i] = number_ch[i] / 10 - number_ch[i - 1] / 10 - 1;
+                    //
+                    // printf("ab%d : %d->%d  %d\n ", i, number_ch[i - 1] / 10,
+                    //        number_ch[i] / 10, ab_len[i]);
+                }
+                // printf("~~~~~~~~~~%d\n", ab_len[i]);
+                // printf2(ab[i], ab_len[i]);
+                // if (i != number)
+                //     printf("%d\n", number_ch[i]);
+            }
+            // number_ch 是字符性质 number 是个数
+            for (int i = 0; i < number; i++) {
+
+                if (number_ch[i] % 10 == 1) { // i是前面,i+1是后面
+                    output1(ab[i + 1][0], ab[i]);
+                }
+                if (number_ch[i] % 10 == 3) { // i是前面,i+1是后面
+                    output2(ab[i + 1][0], ab[i]);
+                }
+            }
+            //
 
         } else {
             pid_t child_pid;
@@ -54,12 +97,18 @@ int main() {
             }
         }
         fflush(stdin);
-        free(a);
-        free(b);
+
+        for (int i = 0; i <= index; i++) {
+            free(a[i]);
+        }
+        free(a);  // a个数为index
+        free(b);  // b是整体
+        free(ab); // ab[]number,[]
     }
 
     return 0;
 }
+
 void parent_code(int chilepid) {
     int wait_rv;
     int child_status;
@@ -147,7 +196,8 @@ char **scanfs(int *index, char *a) {
     return str;
 }
 
-void cdfun(int index, char **a, char *history) {
+void cdfun(int index, char **a, char *cdhistory) {
+    // printf("%s\n", cdhistory);
     struct passwd *pw = getpwuid(getuid());
     const char *home_dir = pw->pw_dir; // 获取用户目录
     if (index > 2) {
@@ -156,13 +206,15 @@ void cdfun(int index, char **a, char *history) {
     } else if (index == 2) {
         char new_directory[256];
         strcpy(new_directory, a[1]);
+        char h1[300];
+        getcwd(h1, sizeof(h1));
         if (chdir(new_directory) == 0) {
             // printf("Changed directory to: %s\n", new_directory);
+            strcpy(cdhistory, h1);
         } else if (strcmp(new_directory, "-") == 0) {
-            chdir("..");
-            char cwd[1024];
-            if (getcwd(cwd, sizeof(cwd)) != NULL)
-                printf("%s\n", cwd);
+            chdir(cdhistory);
+            printf("%s\n", cdhistory);
+            strcpy(cdhistory, h1);
         } else {
             perror("chdir");
         }
@@ -172,6 +224,7 @@ void cdfun(int index, char **a, char *history) {
 }
 
 void sigint_handler() {
+    exit(3);
     // 屏蔽ctrl+c
     // printf("再玩一会吧～\n");
 }
@@ -222,37 +275,53 @@ bool judge(int h, char **a, int index, int i)
 }
 
 // bool judge(int h, char **a, int index, int i)
-int find(int index, char **a) {
-
+int find(int index, char **a, int *number, int *n) {
+    int ret = 0;
+    int count = 0;
     for (int i = 0; i < index; i++) {
         if (strcmp(a[i], ">") == 0) {
-            if (judge(1, a, index, i))
-                return 1;
-            return -1;
+            if (!judge(1, a, index, i))
+                return -1;
+            ret = 1;
+            number[count] = 10 * i;
+            number[count++] += 1;
         } else if (strcmp(a[i], "<") == 0) {
-            if (judge(2, a, index, i))
-                return 2;
-            return -1;
+            if (!judge(2, a, index, i))
+                return -1;
+            ret = 2;
+            number[count] = 10 * i;
+            number[count++] += 2;
         } else if (strcmp(a[i], ">>") == 0) {
-            if (judge(3, a, index, i))
-                return 3;
-            return -1;
+            if (!judge(3, a, index, i))
+                return -1;
+            ret = 3;
+            number[count] = 10 * i;
+            number[count++] += 3;
         } else if (strcmp(a[i], "<<") == 0) {
-            if (judge(4, a, index, i))
-                return 4;
-            return -1;
+            if (!judge(4, a, index, i))
+                return -1;
+            ret = 4;
+            number[count] = 10 * i;
+            number[count++] += 4;
         } else if (strcmp(a[i], "|") == 0) {
-            if (judge(5, a, index, i))
-                return 5;
-            return -1;
+            if (!judge(5, a, index, i))
+                return -1;
+            ret = 5;
+            number[count] = 10 * i;
+            number[count++] += 5;
         } else if (strcmp(a[i], "&") == 0) {
-            if (judge(6, a, index, i))
-                return 6;
-            return -1;
+            if (!judge(6, a, index, i))
+                return -1;
+            ret = 6;
+            number[count] = 10 * i;
+            number[count++] += 6; // 10位是第n个，个位是>>
         }
+
     } // 找字符
-    return 0;
+    *n = count;
+    return ret;
 }
+
 void output1(char *file_name, char **command) {
     FILE *file = fopen(file_name, "w");
 
@@ -262,12 +331,14 @@ void output1(char *file_name, char **command) {
     }
     // 将标准输出重定向到文件
     int fd = fileno(file);
+    printf("~~~~~  %s  %d\n", file_name, fd);
     dup2(fd, STDOUT_FILENO);
+    printf("~~~~~~~\n");
     int pid_child = fork();
     if (pid_child == -1) {
         perror("fork");
     } else if (pid_child == 0) {
-        execvp("ls", command);
+        execvp(command[0], command);
         exit(1);
     } else {
         int wait_rv;
@@ -275,6 +346,50 @@ void output1(char *file_name, char **command) {
         wait(&stats);
     }
     fclose(file);
-    fork(); // 这个是
+    freopen("/dev/tty", "w", stdout);
+    // fork(); // 这个是
     return;
+}
+void output2(char *file_name, char **command) {
+    FILE *file = fopen(file_name, "a");
+
+    if (file == NULL) {
+        perror("Failed to open file");
+        return;
+    }
+    // 将标准输出重定向到文件
+    int fd = fileno(file);
+    printf("~~~~~  %s  %d\n", file_name, fd);
+    dup2(fd, STDOUT_FILENO);
+    int pid_child = fork();
+    if (pid_child == -1) {
+        perror("fork");
+    } else if (pid_child == 0) {
+        execvp(command[0], command);
+        exit(1);
+    } else {
+        int wait_rv;
+        int stats;
+        wait(&stats);
+    }
+    fclose(file);
+    freopen("/dev/tty", "w", stdout);
+    // fork(); // 这个是
+    return;
+}
+
+char **find_command(char **a, int left, int right) {
+    char **ret = (char **)malloc(sizeof(char *) * (right - left + 1));
+    for (int i = 0; i <= right - left; i++) {
+        int len = strlen(a[left + i]);
+        ret[i] = (char *)malloc(sizeof(char) * len);
+        strcpy(ret[i], a[left + i]);
+    }
+    return ret;
+}
+
+void printf2(char **a, int index) {
+    for (int i = 0; i < index; i++) {
+        printf("%s\n", a[i]);
+    }
 }

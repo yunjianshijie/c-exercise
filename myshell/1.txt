@@ -1,0 +1,39 @@
+~/c-exercise
+~/c-exercise
+~/c-exercise
+~/c-exercise
+~/c-exercise
+zzw   环境编程    33
+rzj   环境编程    55
+lsh   网络编程    33
+hzn   网络编程    55
+zzy   数据结构    33
+zt    计算机组成原理  55
+lsh   计算机组成原理  55
+zzy   计算机组成原理  55
+xjj   数据结构    33 
+abcasdaabc
+asdaabca
+abc as
+总计 1561.txt
+22
+2.txt
+3
+33
+3.txt
+5.txt
+cd.c
+echo
+grep
+myshell
+myshell.c
+output.txt
+pipe
+pipe.c
+shell
+shell.c
+shell.h
+test1.txt
+test_dir
+tset
+tset.c

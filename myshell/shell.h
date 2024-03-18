@@ -32,5 +32,7 @@ int find(int index, char **a, int *number, int *n);
 
 void output1(char *file_name, char **command);
 void output2(char *file_name, char **command);
+void output3(char *file_name, char **command, int command_num); //
 char **find_command(char **a, int left, int right); // 将左右两边分割成
 void printf2(char **a, int index);
+int isSystemCommand(const char *command); // 判断是否为系统命令

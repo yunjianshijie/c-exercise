@@ -4,7 +4,10 @@
         "unistd.h": "c",
         "shell.h": "c",
         "signal.h": "c",
-        "stat.h": "c"
+        "stat.h": "c",
+        "random": "c",
+        "chrono": "c",
+        "variant": "c"
     },
     "files.autoSave": "onFocusChange",
     "C_Cpp.errorSquiggles": "disabled"

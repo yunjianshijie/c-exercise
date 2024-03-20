@@ -13,7 +13,7 @@ int main() {
     while (1) {
         int number_ch[10] = {0}; // 一从前到后编号，100*位
         int number = 0;
-        char *b = printfs();
+        char *b = printfs(); // 获取字符串
         int index = 0;
         char **a = scanfs(&index, b);
         a[index] = 0;
@@ -405,6 +405,20 @@ void output3(char *file_name, char **command, int command_num) {
     // printf("%s", file_name);
 }
 
+void output3(char **command1, char **command2) {
+    int pipefd[2];
+    pid_t child_pid;
+    if (pipe(pipefd) == -1) {
+        perror("pipe");
+    }
+    child_pid = fork();
+    if (child_pid == -1) {
+        perror("fork");
+    } else if (child_pid == 0) {
+        close(pipefd[1]); // 关读入
+        dup2(pipefd[0], 0);
+    }
+}
 char **find_command(char **a, int left, int right) {
     char **ret = (char **)malloc(sizeof(char *) * (right - left + 1));
     for (int i = 0; i <= right - left; i++) {

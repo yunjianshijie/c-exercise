@@ -1,5 +1,4 @@
 #include "shell.h"
-int munu[10]; //
 int main() {
 
     struct termios term; // 结构体储存终端中各种属性
@@ -13,103 +12,79 @@ int main() {
     while (1) {
         int number_ch[10] = {0}; // 一从前到后编号，100*位
         int number = 0;
+        printf("\n");
         char *b = printfs(); // 获取字符串
+        if (b == NULL) {
+            continue;
+        }
         int index = 0;
-        char **a = scanfs(&index, b);
-        a[index] = 0;
-        if (index == 0) {
-            continue;
-        }
-        if (strcmp(a[0], "cd") == 0) {
-            cdfun(index, a, cdhistory);
-            continue;
-        }
-        if (strcmp(a[0], "as") == 0) {
-            printf("没有汇编文件哦~\n");
-            continue;
-        }
-        if (index == 1 && strcmp(a[0], "exit") == 0) {
-            exit(2);
-        }
-        // 处理
-        // number_ch数量
-        int h = find(index, a, number_ch, &number); // 找字符
-        char ***ab = (char ***)malloc(sizeof(char **) * number);
-        int ab_len[50];
-        if (h == -1) {
-            printf("输入格式问题\n");
-            continue;
-        }
-        if (h != 0) {
-            printf("!!!!!\n"); // h有
+        int count = 0; // 有多少个管道符+1
+        const char *strpipe = "|";
+        char *str = strstr(b, strpipe);
 
-            for (int i = 0; i < number + 1; i++) {
-                // printf("zjipj\n");
-                if (i == 0) {
-                    ab[i] = find_command(a, 0, (number_ch[i] / 10) - 1);
-                    ab_len[i] = number_ch[i] / 10;
-                } else if (i == number) {
-                    ab[i] =
-                        find_command(a, (number_ch[i - 1] / 10) + 1, index - 1);
-                    ab_len[i] = index - 1 - number_ch[i - 1] / 10;
-
-                } else {
-                    ab[i] = find_command(a, number_ch[i - 1] / 10 + 1,
-                                         number_ch[i] / 10 - 1);
-                    ab_len[i] = number_ch[i] / 10 - number_ch[i - 1] / 10 - 1;
-                }
-                // printf("~~~~~~~~~~%d\n", ab_len[i]);
-                // printf2(ab[i], ab_len[i]);
-                // if (i != number)
-                //     printf("%d\n", number_ch[i]);
+        if (str != NULL) {
+            // printf("有管道\n");
+            char **command1s = cut_pipe(b, &count);
+            char **commands[10];
+            int index1[10];
+            // printf("count =%d", count);
+            for (int i = 0; i < count; i++) {
+                commands[i] = cut_str(index1 + i, command1s[i]);
+                commands[i][*(index1 + i)] = NULL;
             }
-            // number_ch 是字符性质 number 是个数,ab_len是长度 ab多少个
-            for (int i = 0; i < number; i++) {
-
-                if (number_ch[i] % 10 == 1) { // i是前面,i+1是后面 >
-                    ab[i][ab_len[i]] = 0;
-                    ab[i + 1][ab_len[i + 1]] = 0;
-                    output1(ab[i + 1][0], ab[i]);
-                }
-                if (number_ch[i] % 10 == 3) { // i是前面,i+1是后面 >>
-                    ab[i][ab_len[i]] = 0;
-                    ab[i + 1][ab_len[i + 1]] = 0;
-                    output2(ab[i + 1][0], ab[i]);
-                }
-                if (number_ch[i] % 10 == 2) { // <
-                    ab[i][ab_len[i]] = 0;
-                    output3(ab[i + 1][0], ab[i], ab_len[i]);
-                }
-                if (number_ch[i] % 10 == 5) {
-                    ab[i][ab_len[i]] = 0;
-                }
-            }
-            //
-
-        } else {
-            a[index] = 0;
+            // count++;
+            int pipes[count - 1][2];
             pid_t child_pid;
-            child_pid = fork();
-            if (child_pid == -1) {
-                perror("fork");
-            } else if (child_pid == 0) {
-                // FILE *file;
-                execvp(a[0], a);
-                exit(1);
-                // printf("sdkf");
-            } else {
-                parent_code(child_pid);
+            for (int i = 0; i < count - 1; i++) {
+                if (pipe(pipes[i]) == -1) {
+                    perror("pipe");
+                    exit(EXIT_FAILURE);
+                }
             }
-        }
-        fflush(stdin);
+            // count个命令
+            for (int i = 0; i < count; i++) {
+                printf("%d\n", i);
+                child_pid = fork();
+                if (child_pid == -1) {
+                    perror("fork");
+                } else if (child_pid == 0) {
 
-        // for (int i = 0; i <= index; i++) {
-        //     free(a[i]);
-        // }
-        free(a);  // a个数为index
-        free(b);  // b是整体
-        free(ab); // ab[]number,[]
-        // return 0;
+                    if (i > 0) {
+
+                        close(pipes[i - 1][1]); // 关闭前一个管道的写入端
+                        dup2(pipes[i - 1][0],
+                             STDIN_FILENO); //
+                        // 重定向前一个管道的读取端到标准输入
+                        close(pipes[i - 1][0]);
+                    }
+
+                    if (i != count - 1) {
+                        close(pipes[i][0]); // 关闭当前管道的读取端
+                        dup2(pipes[i][1],
+                             STDOUT_FILENO); //
+                        // 重定向当前管道的写入端到标准输出
+                        close(pipes[i][1]); // 再关写入
+                    }
+
+                    command(commands[i], index1[i], cdhistory);
+                    exit(3);
+                    // execvp(commands[i][0], commands[i]);
+                }
+            }
+            for (int i = 0; i < count - 1; i++) {
+                close(pipes[i][0]);
+                close(pipes[i][1]);
+            } // 关闭所有管道
+
+            for (int i = 0; i < count; i++) {
+                wait(NULL);
+            }
+
+        } else { // 就必须有空格才能
+            char **a = cut_str(&index, b);
+            command(a, index, cdhistory);
+        }
+        free(b);
     }
 
     return 0;
@@ -167,26 +142,34 @@ char *printfs() { // 打印开头
     localTime = localtime(&rawTime);
     printf("[%02d:%02d:%02d] ", localTime->tm_hour, localTime->tm_min,
            localTime->tm_sec);
-    char *a = (char *)malloc(sizeof(char) * 40);
-    a = readline("\n\033[1;31m$\033[0m ");
+    // char *a = (char *)malloc(sizeof(char) * 40);
+    char *a = readline("\001\n\033[1;31m$\033[0m \002");
+    if (a == NULL || a == "\n" || a == " ")
+        return NULL;
+    a[strlen(a)] = '\0';
     add_history(a);
-    printf("%s  zz\n", a);
+    // printf("\n\033[1;31m$\033[0m ");
+
+    // char ch;
+    // int count = 0;
+    // fflush(stdin);
+    // getchar();
     // sleep(3);
+    // while ((ch = getchar()) != '\n') {
+    //     a[count] = ch;
+    //     count++;
+    //     // printf("%d", count);
+    // }
+    // a[count] = '\0';
+    // printf("%s  zz\n", a);
+
     return a;
 }
 
-char **scanfs(int *index, char *a) {
+char **cut_str(int *index, char *a) {
     char **str = (char **)malloc(sizeof(char *) * 100);
     // char a[1000];
     char ch;
-    int i = 0;
-    // printf("ksl\n");
-    // while ((ch = getchar()) != '\n') {
-    //     a[i++] = ch;
-    //     // printf("%d  ", i);
-    // }
-    // printf("a======%s\n", a);
-    // a[i] = '\0';
     const char delim[] = " "; // 使用空格作为分隔符
     char *token;
     token = strtok(a, delim);
@@ -195,11 +178,28 @@ char **scanfs(int *index, char *a) {
         int len = strlen(token);
         str[j] = (char *)malloc(sizeof(char) * (len + 1));
         strcpy(str[j], token);
-        // printf("11 %s \n", str[j]);
+        // printf("11 %s  %d \n", str[j], j);
         j++;
         token = strtok(NULL, delim);
     }
+
     *(index) = j;
+    return str;
+}
+char **cut_pipe(char *strin, int *count) {
+    int i = 0;
+    const char delim[] = "|";
+    char *token;
+    token = strtok(strin, delim);
+    char **str = (char **)malloc(sizeof(char *) * 20);
+    while (token != NULL) {
+        int len = strlen(token);
+        str[i] = (char *)malloc(sizeof(char) * (len + 1));
+        strcpy(str[i], token);
+        i++;
+        token = strtok(NULL, delim);
+    }
+    *(count) = i;
     return str;
 }
 
@@ -282,7 +282,8 @@ bool judge(int h, char **a, int index, int i)
 }
 
 // bool judge(int h, char **a, int index, int i)
-int find(int index, char **a, int *number, int *n) {
+int find(int index, char **a, int *number,
+         int *n) { // index 个数，a二维数组，number 数组_状态 ，n为个数
     int ret = 0;
     int count = 0;
     for (int i = 0; i < index; i++) {
@@ -329,7 +330,8 @@ int find(int index, char **a, int *number, int *n) {
     return ret;
 }
 
-void output1(char *file_name, char **command) {
+void output1(char *file_name, char **command) { ///
+    // printf("12345  %s\n", file_name);
     FILE *file = fopen(file_name, "w");
 
     if (file == NULL) {
@@ -338,87 +340,103 @@ void output1(char *file_name, char **command) {
     }
     // 将标准输出重定向到文件
     int fd = fileno(file);
-    printf("~~~~~  %s  %d\n", file_name, fd);
-    dup2(fd, STDOUT_FILENO);
-    printf("~~~~~~~\n");
+    // printf("~~~~~  %s  %d\n", file_name, fd);
+    // printf("dsdd  %s\n", command[0]);
+
     int pid_child = fork();
     if (pid_child == -1) {
         perror("fork");
     } else if (pid_child == 0) {
+        dup2(fd, STDOUT_FILENO);
+
         execvp(command[0], command);
         exit(1);
     } else {
         int wait_rv;
         int stats;
-        wait(&stats);
+        waitpid(pid_child, &stats, 0);
     }
     fclose(file);
-    freopen("/dev/tty", "w", stdout);
-    // fork(); // 这个是
+    // freopen("/dev/tty", "w", stdout);
+    //  fork(); // 这个是
     return;
 }
 void output2(char *file_name, char **command) {
-    FILE *file = fopen(file_name, "a");
+    int fd = open(file_name, O_CREAT | O_WRONLY | O_APPEND, 0777);
+    printf("~~~~~  %s  %d  %s\n", file_name, fd, command[0]);
 
-    if (file == NULL) {
-        perror("Failed to open file");
-        return;
-    }
-    // 将标准输出重定向到文件
-    int fd = fileno(file);
-    printf("~~~~~  %s  %d\n", file_name, fd);
-    dup2(fd, STDOUT_FILENO);
     int pid_child = fork();
     if (pid_child == -1) {
         perror("fork");
     } else if (pid_child == 0) {
+        dup2(fd, STDOUT_FILENO);
+        printf("1111\n");
+        close(fd);
         execvp(command[0], command);
         exit(1);
     } else {
         int wait_rv;
         int stats;
-        wait(&stats);
+
+        waitpid(pid_child, &stats, 0);
+        printf("1111111111111\n");
     }
-    fclose(file);
-    freopen("/dev/tty", "w", stdout);
-    // fork(); // 这个是
+
+    // freopen("/dev/tty", "w", stdout);
+    //  fork(); // 这个是
     return;
 }
-void output3(char *file_name, char **command, int command_num) {
-    int len = strlen(file_name);
-    command[command_num] = (char *)malloc(sizeof(char) * len);
-    strcpy(command[command_num], file_name);
-    command[command_num + 1] = 0;
+void output3(char *file_name, char **command,
+             int command_num) { // '<' 文件 ，命令， 命令长度
+    // int len = strlen(file_name);
+    // command[command_num] = (char *)malloc(sizeof(char) * len);
+    // printf("%d\n", command_num);
+    // strcpy(command[command_num], file_name);
+    // command[command_num] = NULL;
+    // // command_num++;
+
     pid_t child_pid = fork();
     if (child_pid == -1) {
         perror("fork");
     } else if (child_pid == 0) {
+        // printf("ff");
+        int fd = open(file_name, O_RDONLY); // 将标准输出重定向到文件
+        // int fd2 = dup(0);
+        dup2(fd, STDIN_FILENO);
+        close(fd);
         execvp(command[0], command);
-        exit(2);
+        // exit(2);
     } else {
         int stats;
-        wait(&stats);
+        waitpid(child_pid, &stats, 0);
+        // wait(&stats);
         printf("\n");
     }
 
-    // printf("zheli\n");
-    // printf("%s", file_name);
+    // dup2(fd2, STDOUT_FILENO);
+    //  printf("d\n");
 }
 
-void output3(char **command1, char **command2) {
-    int pipefd[2];
-    pid_t child_pid;
-    if (pipe(pipefd) == -1) {
-        perror("pipe");
-    }
-    child_pid = fork();
-    if (child_pid == -1) {
-        perror("fork");
-    } else if (child_pid == 0) {
-        close(pipefd[1]); // 关读入
-        dup2(pipefd[0], 0);
-    }
-}
+// void output4(char **command1, char **command2, int index1, int index2,
+//              char *cdhistory) {
+//     int pipefd[2];
+//     pid_t child_pid;
+//     if (pipe(pipefd) == -1) {
+//         perror("pipe");
+//     }
+//     child_pid = fork();
+//     if (child_pid == -1) {
+//         perror("fork"); // 错误
+//     } else if (child_pid == 0) {
+//         close(pipefd[1]);   // 关读入
+//         dup2(pipefd[0], 1); // 将文件描述符与输出流连接
+//         close(pipefd[2]);
+//         command(command1, index1, cdhistory); //
+//     } else {
+//         close(pipefd[0]); // 关写入 ，这里只读
+//     }
+// }
+
 char **find_command(char **a, int left, int right) {
     char **ret = (char **)malloc(sizeof(char *) * (right - left + 1));
     for (int i = 0; i <= right - left; i++) {
@@ -431,7 +449,8 @@ char **find_command(char **a, int left, int right) {
 
 void printf2(char **a, int index) {
     for (int i = 0; i < index; i++) {
-        printf("%s\n", a[i]);
+        printf("%d", i);
+        printf(" %s\n", a[i]);
     }
 }
 
@@ -451,4 +470,109 @@ int isSystemCommand(const char *command) {
     } else {
         return 0; // 不是系统命令
     }
+}
+
+int command(char **a, int index, char *cdhistory) {
+    // printf("111111111~~~~~~~~~~~~~");
+    char *ab[3][5]; // number_ch 是字符性质 n 是个数,ab_len是长度 ab多少个
+    a[index] = 0;
+    if (index == 0) {
+        return 1;
+    }
+    if (strcmp(a[0], "cd") == 0) {
+        cdfun(index, a, cdhistory);
+        return 1;
+    }
+    if (strcmp(a[0], "as") == 0) {
+        printf("没有汇编文件哦~\n");
+        return 1;
+    }
+    if (index == 1 && strcmp(a[0], "exit") == 0) {
+        exit(2);
+    }
+    int number_ch[8];
+    int number[8];
+    memset(number, 0, 8);
+    int n = 0;
+    // int find(int index, char **a, int *number, int *n);
+    if (find(index, a, number_ch, &n) == -1) {
+        printf("格式错误");
+        exit(3);
+    }
+    // printf("(number_ch[i + 1] / 10) - (number_ch[i] / 10)=%d\n",
+    //        (number_ch[1] / 10)); //- (number_ch[0] / 10)
+    if (n == 0) {
+        pid_t child_pid = fork();
+        if (child_pid == -1) {
+            perror("fork");
+        } else if (child_pid == 0) {
+            // 子函数
+            execvp(a[0], a);
+            exit(0);
+        } else {
+            int stats;
+            waitpid(child_pid, &stats, 0);
+        }
+    } else {
+        // printf("dsfsd");
+        number_ch[n] = (index) * 10;
+        for (int i = 0; i <= n; i++) {
+            if (i == 0) {
+                number[i] = number_ch[i] / 10;
+                for (int k = 0; k <= number_ch[i] / 10 - 1; k++) {
+                    int len = strlen(a[k]);
+                    ab[i][k] = (char *)malloc(sizeof(char) * len);
+                    ab[i][k] = "\0";
+                    // ab[i]
+                    puts(a[k]);
+                    // strcpy(ab[i][k], a[k]);
+                    ab[i][k] = strdup(a[k]);
+                    // printf("1ab[%d][%d]=%s\n", i, k, ab[i][k]);
+                }
+            } else {
+                number[i] = number_ch[i] / 10 - number_ch[i - 1] / 10;
+                int j = (number_ch[i - 1] / 10);
+                for (; j < number_ch[i] / 10 - 1; j++) {
+                    // printf("------------\n");
+                    ab[i][j - (number_ch[i - 1]) / 10] =
+                        (char *)malloc(sizeof(char) * 10);
+                    memset(ab[i][j - (number_ch[i - 1]) / 10], '\0', 10);
+                    strcpy(ab[i][j - (number_ch[i - 1]) / 10], a[j + 1]);
+                }
+            }
+            // ab[i][j] = NULL;
+            // printf("%d\n", i);
+        }
+        // printf("n=%d\n", n);
+        for (int i = 0; i < n; i++) {
+            ab[i][number[i]] = NULL;
+            if (number_ch[i] % 10 == 1) {
+                int nn = 0;
+                while (i - nn != 0 && isSystemCommand(ab[i - nn][0]) == 0) {
+                    nn++;
+                }
+                output1(ab[i + 1][0], ab[i - nn]);
+                // free(abb);
+            } else if (number_ch[i] % 10 == 3) { //>>
+                printf("----------output2 >>\n");
+                int nn = 0;
+                while (i - nn != 0 && isSystemCommand(ab[i - nn][0]) == 0) {
+                    nn++;
+                }
+                output2(ab[i + 1][0], ab[i - nn]);
+            } else if (number_ch[i] % 10 == 2) {
+                printf("----------output3 <\n");
+                output3(ab[i + 1][0], ab[i],
+                        number_ch[i + 1] / 10 - number_ch[i] / 10);
+            }
+        }
+        for (int i = 0; i < n; i++) {
+            for (int j = 0;
+                 j < (number_ch[i + 1] / 10) - (number_ch[i] / 10) - 2; j++) {
+                free(ab[i][j]);
+            }
+        }
+    }
+
+    return 0;
 }

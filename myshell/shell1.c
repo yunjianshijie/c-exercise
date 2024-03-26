@@ -24,27 +24,30 @@ void exe(char *a, int num_pipe); //
 void redirect(char *argv[], int argc);
 void redirect_input(char *file_name);
 void redirect_output(char *file_name, int index);
+void home(char *a, char *home);
 int main() {
-    //     signal(SIGINT, SIG_IGN);
-    //     signal(SIGQUIT, SIG_IGN);
-    //     signal(SIGTSTP, SIG_IGN); // 屏蔽信号
+    // signal(SIGINT, SIG_IGN);
+    // signal(SIGQUIT, SIG_IGN);
+    // signal(SIGTSTP, SIG_IGN); // 屏蔽信号
     char cd_history[300];
     getcwd(cd_history, sizeof(cd_history));
     while (1) {
         char *a = read_str(); // a为
-        char *b = (char *)malloc(sizeof(char) * strlen(a));
-        strcpy(b, a);
         if (a == NULL) {
             free(a);
             continue;
         }
+        char *b = (char *)malloc(sizeof(char) * (strlen(a) + 1));
+        strcpy(b, a);
         char argv[40][40]; // 分割
         int argc = 0;
         const char delim[] = " ";
         char *token = strtok(a, delim);
 
-        while (token != NULL) {
-            strcpy(argv[argc++], token);
+        while (token != NULL && argc < 40) {
+            strncpy(argv[argc], token, sizeof(argv[argc]) - 1);
+            argv[argc][sizeof(argv[argc]) - 1] = '\0'; // 确保字符串以空字符结尾
+            argc++;
             token = strtok(NULL, delim);
         }
         // printf("zhel%d\n", argc);
@@ -61,7 +64,10 @@ int main() {
         }
         exe(b, num_pipe);
         printf("\n");
+        free(a);
+        free(b);
     }
+
     return 0;
 }
 
@@ -81,7 +87,11 @@ char *read_str() { // 打印开头
     struct passwd *pw = getpwuid(getuid());
     const char *home_dir = pw->pw_dir; // 获取用户目录
     char cwd[1024];
+
     if (getcwd(cwd, sizeof(cwd)) != NULL) {
+        if (strcmp(pw->pw_dir, cwd) <= 0) {
+            home(cwd, pw->pw_dir);
+        }
         printf("in \033[1;33m%s\033[0m ", cwd); // 黄色
     }
     time_t rawTime;
@@ -115,6 +125,9 @@ void cdfun(int index, char a[40][40], char *cdhistory) {
             chdir(cdhistory);
             printf("%s\n", cdhistory);
             strcpy(cdhistory, h1);
+        } else if (strcmp(new_directory, "~") == 0) {
+            chdir(home_dir);
+            strcpy(cdhistory, h1);
         } else {
             perror("chdir");
         }
@@ -141,9 +154,11 @@ void exe(char *a, int num_pipe) {
     const char delim[] = "|";
     // printf("a=%s\n", a);
     char *token = strtok(a, delim);
-    char *com[40];
+    char com[40][40];
+    char **free_1;
+    int free_argc;
     while (token != NULL) {
-        com[num_com] = (char *)malloc(strlen(token) + 1);
+        // com[num_com] = (char *)malloc(strlen(token) + 1);
         strcpy(com[num_com], token);
         num_com++;
         token = strtok(NULL, delim);
@@ -180,31 +195,33 @@ void exe(char *a, int num_pipe) {
                     close(pipefd[i][0]);
                 } // 关闭所有管道
             }     // 如果有管道
-
             char *argv[40];
+            free_1 = argv;
             int argc = 0;
             token = strtok(com[i], " ");
             while (token != NULL) {
-                argv[argc] = (char *)malloc(sizeof(char) * strlen(token + 1));
+                argv[argc] = (char *)malloc(sizeof(char) * strlen(token) + 1);
                 strcpy(argv[argc++], token);
                 token = strtok(NULL, " ");
             }
+            free_argc = argc;
             // 分割了 ，要开始execvp了
-            // printf("argv !!%s\n", argv[0]); // 这里如果有管道只会报最后一个
             argv[argc] = NULL;
             redirect(argv, argc);
-            // printf("cheng!\n");
-            // printf("%s\n", argv[0]);
             execvp(argv[0], argv);
             perror("execvp");
             exit(EXIT_FAILURE);
+            for (int i = 0; i < free_argc; i++) {
+                free(free_1[i]);
+            }
         }
+
         // else { // 父进程
 
         //     wait(NULL);
         //     printf("父进程停止wait%d\n", i);
         // }
-    }
+    } // 循环结束
     for (int i = 0; i < num_com - 1; i++) {
         close(pipefd[i][1]);
         close(pipefd[i][0]);
@@ -261,4 +278,13 @@ void redirect_output(char *file_name, int index) {
         perror("dup2");
     }
     close(fd);
+}
+void home(char *a, char *home) { // 改home文件成~;
+    int lenhome = strlen(home);
+    int len = strlen(a);
+    a[0] = '~';
+    for (int i = 1; i < len - lenhome + 1; i++) {
+        a[i] = a[i + lenhome - 1];
+    }
+    a[len - lenhome + 1] = '\0';
 }

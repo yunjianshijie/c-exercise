@@ -44,7 +44,7 @@ int main() {
             printf("输入格式问题\n");
             continue;
         } else if (h != 0) {
-            printf("!!!!!有 |  < > << >> &\n"); // h有
+            printf("!!!!!有 |  < > >> &\n"); // h有
 
             for (int i = 0; i < number + 1; i++) {
                 // printf("zjipj\n");

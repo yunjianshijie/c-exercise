@@ -26,9 +26,9 @@ void redirect_input(char *file_name);
 void redirect_output(char *file_name, int index);
 void home(char *a, char *home);
 int main() {
-    // signal(SIGINT, SIG_IGN);
-    // signal(SIGQUIT, SIG_IGN);
-    // signal(SIGTSTP, SIG_IGN); // 屏蔽信号
+    signal(SIGINT, SIG_IGN);
+    signal(SIGQUIT, SIG_IGN);
+    signal(SIGTSTP, SIG_IGN); // 屏蔽信号
     char cd_history[300];
     getcwd(cd_history, sizeof(cd_history));
     while (1) {

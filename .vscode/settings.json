@@ -1,14 +1,17 @@
 {
-    "files.associations": {
-        "memory": "c",
-        "unistd.h": "c",
-        "shell.h": "c",
-        "signal.h": "c",
-        "stat.h": "c",
-        "random": "c",
-        "chrono": "c",
-        "variant": "c"
-    },
-    "files.autoSave": "onFocusChange",
-    "C_Cpp.errorSquiggles": "disabled"
+  "files.associations": {
+    "memory": "c",
+    "unistd.h": "c",
+    "shell.h": "c",
+    "signal.h": "c",
+    "stat.h": "c",
+    "random": "c",
+    "chrono": "c",
+    "variant": "c",
+    "types.h": "c",
+    "wait.h": "c",
+    "stdio.h": "c"
+  },
+  "files.autoSave": "onFocusChange",
+  "C_Cpp.errorSquiggles": "disabled"
 }

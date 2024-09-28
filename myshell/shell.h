@@ -21,7 +21,8 @@
 #define BEGIN(x, y) "\001\033[" #x ";" #y "m\002" // x: 背景，y: 前景
 void home(char *a, char *home); // 判断是否在home/user里面,并改成~
 char *printfs();                // 输入前面一串 返回输入字符串
-char **scanfs(int *index, char *a); // 分割字符 index有多少给字符，返回输入
+char **cut_str(int *index, char *a); // 分割字符 index有多少给字符，返回输入
+char **cut_pipe(char *strin, int *count);
 void cdfun(int index, char **a, char *cdhistory); // cd功能
 void parent_code(int chilepid);
 void sigint_handler(); // 屏蔽ctrl+c
@@ -33,6 +34,9 @@ int find(int index, char **a, int *number, int *n);
 void output1(char *file_name, char **command);
 void output2(char *file_name, char **command);
 void output3(char *file_name, char **command, int command_num); //
+void output4(char **command1, char **command2, int index1, int index2,
+             char *cdhistory);                      //
 char **find_command(char **a, int left, int right); // 将左右两边分割成
 void printf2(char **a, int index);
 int isSystemCommand(const char *command); // 判断是否为系统命令
+int command(char **a, int index, char *); // 执行没有管道命令

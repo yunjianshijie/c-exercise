@@ -48,52 +48,38 @@ int main() {
                 if (child_pid == -1) {
                     perror("fork");
                 } else if (child_pid == 0) {
-                    if (i == 0) {
-                        // 关闭读数据端，并重定向写数据端
-                        dup2(pipes[i][1], 1);
-                    }
-                    // 最后一个命令
-                    else if (i == count - 1) {
-                        // 关闭读数据端，并重定向写数据端
-                        dup2(pipes[i - 1][0], 0);
+
+                    if (i > 0) {
+
+                        close(pipes[i - 1][1]); // 关闭前一个管道的写入端
+                        dup2(pipes[i - 1][0],
+                             STDIN_FILENO); //
+                        // 重定向前一个管道的读取端到标准输入
+                        close(pipes[i - 1][0]);
                     }
 
-                    // 中间的命令
-                    else {
-                        // 重定向读数据端
-                        dup2(pipes[i - 1][0], 0);
-
-                        // 重定向写数据端
-                        dup2(pipes[i][1], 1);
+                    if (i != count - 1) {
+                        close(pipes[i][0]); // 关闭当前管道的读取端
+                        dup2(pipes[i][1],
+                             STDOUT_FILENO); //
+                        // 重定向当前管道的写入端到标准输出
+                        close(pipes[i][1]); // 再关写入
                     }
                     command(commands[i], index1[i], cdhistory);
                     exit(3);
+                    // execvp(commands[i][0], commands[i]);
                 }
-                for (int i = 0; i < count - 1; i++) {
-                    close(pipes[i][0]);
-                    close(pipes[i][1]);
-                } // 关闭所有管道
+                // printf(":%d\n", i);
             }
             for (int i = 0; i < count - 1; i++) {
                 close(pipes[i][0]);
                 close(pipes[i][1]);
             } // 关闭所有管道
 
-            for (int i = 0; i < count - 1; i++) {
+            for (int i = 0; i < count; i++) {
                 // printf("zheli1 :%d %d\n", i, child_pid);
-                printf("wait:%d\n", i);
-                sleep(2);
-                // wait(NULL);
+                wait(NULL);
             }
-            // int status;
-            // pid_t child_pid1;
-            // while ((child_pid1 = waitpid(-1, &status, 0)) > 0) {
-            //     if (WIFEXITED(status)) {
-            //         printf("Child proceca process with PID %d exited
-            //         abnormally\n",
-            //                child_pid1);
-            //     }
-            // }
 
         } else { // 就必须有空格才能
             char **a = cut_str(&index, b);
@@ -163,11 +149,27 @@ char *printfs() { // 打印开头
         return NULL;
     a[strlen(a)] = '\0';
     add_history(a);
+    // printf("\n\033[1;31m$\033[0m ");
+
+    // char ch;
+    // int count = 0;
+    // fflush(stdin);
+    // getchar();
+    // sleep(3);
+    // while ((ch = getchar()) != '\n') {
+    //     a[count] = ch;
+    //     count++;
+    //     // printf("%d", count);
+    // }
+    // a[count] = '\0';
+    // printf("%s  zz\n", a);
+
     return a;
 }
 
 char **cut_str(int *index, char *a) {
     char **str = (char **)malloc(sizeof(char *) * 100);
+    // char a[1000];
     char ch;
     const char delim[] = " "; // 使用空格作为分隔符
     char *token;
@@ -234,6 +236,23 @@ void sigint_handler() {
     // 屏蔽ctrl+c
     // printf("再玩一会吧～\n");
 }
+void mypipe() {
+    int pipefd[2];
+    pid_t pid;
+
+    if (pipe(pipefd) == -1) {
+        perror("pipe");
+        exit(EXIT_FAILURE);
+    }
+
+    pid = fork();
+
+    if (pid == -1) {
+        perror("fork");
+        exit(EXIT_FAILURE);
+    }
+}
+
 bool judge(int h, char **a, int index, int i)
 // 判断重定向，管道，&后台进行，是否输入正确
 {
@@ -343,7 +362,7 @@ void output1(char *file_name, char **command) { ///
     //  fork(); // 这个是
     return;
 }
-void output2(char *file_name, char **command) { //>>
+void output2(char *file_name, char **command) {
     int fd = open(file_name, O_CREAT | O_WRONLY | O_APPEND, 0777);
     printf("~~~~~  %s  %d  %s\n", file_name, fd, command[0]);
 
@@ -352,8 +371,8 @@ void output2(char *file_name, char **command) { //>>
         perror("fork");
     } else if (pid_child == 0) {
         dup2(fd, STDOUT_FILENO);
+        printf("1111\n");
         close(fd);
-        printf("_________1111\n");
         execvp(command[0], command);
         exit(1);
     } else {
@@ -558,3 +577,19 @@ int command(char **a, int index, char *cdhistory) {
 
     return 0;
 }
+// if (i > 0) {
+
+//     close(pipes[i - 1][1]); // 关闭前一个管道的写入端
+//     dup2(pipes[i - 1][0],
+//          STDIN_FILENO); //
+//     // 重定向前一个管道的读取端到标准输入
+//     // close(pipes[i - 1][0]);
+// }
+
+// if (i != count - 1) {
+//     close(pipes[i][0]); // 关闭当前管道的读取端
+//     dup2(pipes[i][1],
+//          STDOUT_FILENO); //
+//     // 重定向当前管道的写入端到标准输出
+//     // close(pipes[i][1]); // 再关写入
+// }
